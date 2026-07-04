@@ -47,6 +47,9 @@
             font-size: 16px;
         }
 
+        /* BGM 오디오 요소는 JS로만 제어 — 레이아웃 공간 차지 방지 */
+        #bgm { display: none; }
+
         body {
             font-family: 'Noto Sans KR', 'Inter', sans-serif;
             background: var(--bg-body);
@@ -395,7 +398,60 @@
             font-size: 1.1rem;
             font-weight: 500;
         }
-        
+
+        /* ---- 반응형 (모바일 / 작은 화면) ---- */
+        @media (max-width: 600px) {
+            html { font-size: 15px; }
+            body {
+                height: 100dvh;
+                padding: 0.75rem 0;
+            }
+            h1 { font-size: 2rem; }
+
+            .container {
+                padding: 2rem 1.25rem;
+                height: auto;
+                max-height: 94vh;
+                width: 100%;
+                max-width: 94vw;
+            }
+
+            .dict-container {
+                padding: 1.25rem;
+                height: auto;
+                max-height: 94vh;
+                width: 100%;
+                max-width: 94vw;
+            }
+
+            /* 인라인 height/padding 가진 설정 화면 override */
+            #settings-area {
+                height: auto !important;
+                max-height: 94vh !important;
+                padding: 2rem 1.25rem !important;
+            }
+
+            .menu-btn, .option-btn, .action-btn {
+                font-size: 1rem;
+                padding: 0.9rem;
+            }
+
+            .settings-btn {
+                bottom: 0.75rem;
+                left: 0.75rem;
+                font-size: 1.3rem;
+            }
+            .creator-info {
+                bottom: 0.75rem;
+                right: 0.75rem;
+                font-size: 0.8rem;
+            }
+
+            /* 도감 행: 좁은 화면에서 단어/뜻 세로 배치 */
+            .dict-col-word { width: 42%; }
+            .dict-divider { margin: 0 0.5rem; }
+        }
+
     </style>
 </head>
 <body>
@@ -548,7 +604,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.1.0";
+        const APP_VERSION = "1.1.1";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
