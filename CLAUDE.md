@@ -44,17 +44,32 @@ Four quiz modes, selected from the main menu and branched on the `currentMode` g
 Game flow: `openSetup(mode)` → `executeGameStart` (reads nickname/time-limit/round-count) → `startGame` (shuffles `DB`, slices to round count) → `loadQuestion` → `submitAnswer`/`checkOption` → `showFeedback` → `nextQuestion` → `showResult`. Score is `100 / totalRounds` per correct answer. A per-question countdown (`startTimer`/`stopTimer`) auto-fails on timeout when a time limit is set.
 
 Cross-cutting subsystems:
-- **Theming**: light/dark via CSS custom properties on `:root` and `[data-theme="dark"]`; `toggleTheme` sets/removes the `data-theme` attribute on `<body>`. State is in-memory only — nothing is persisted to `localStorage`.
-- **Audio**: BGM plays through the `#bgm` `<audio>` element; SFX (correct/incorrect) are synthesized on the fly with the Web Audio API in `playSound` (no sound files).
+- **Theming**: light/dark via CSS custom properties on `:root` and `[data-theme="dark"]`; `toggleTheme` sets/removes the `data-theme` attribute on `<body>`. The theme is persisted to `localStorage` under the `gystudy-settings` key (`{ isDarkMode }`) via `saveSettings`, and restored on load by `loadSettings`.
 - **Dictionary (도감)**: `showDict` opens a searchable, tabbed browser over `DB` filtered by `type`, rendered by `renderDictList`.
+
+(No audio: BGM/SFX were removed in v2.0.0 — the app has no sound.)
 
 ## 버전 관리 (Versioning)
 
 이 프로젝트는 **유의적 버전(Semantic Versioning, `MAJOR.MINOR.PATCH`)** 을 따른다.
 
-- **MAJOR** — 하위 호환이 깨지는 변경. 예: `DB` 항목 스키마 변경(필드 추가/삭제/의미 변경), 저장 데이터(`localStorage` 등) 포맷 변경, 기존 동작을 바꾸는 대규모 개편.
-- **MINOR** — 하위 호환되는 기능 추가. 예: 새 퀴즈 모드, 새 설정 항목, `DB`에 새 관용어/속담 추가.
-- **PATCH** — 하위 호환되는 버그 수정·문구 수정·스타일 조정·리팩터링(동작 불변).
+### 등급 정의
+
+- **MAJOR** — 하위 호환이 깨지는 변경. 예: `DB` 항목 스키마 변경(필드 추가/삭제/의미 변경), 저장된 `localStorage` 데이터를 **기존 코드가 못 읽거나 오해하게 되는** 포맷 변경, 기존 기능 제거, 기존 동작을 바꾸는 대규모 개편.
+- **MINOR** — 하위 호환되는 기능 추가·확장. 예: 새 퀴즈 모드, 새 설정 항목, `DB`에 새 관용어/속담 추가, 기존 저장 데이터를 안전하게 무시·확장하는 `localStorage` 필드 추가.
+- **PATCH** — 하위 호환되는 버그 수정, 문구 수정, **사용자가 보는 스타일·레이아웃 조정**, 데이터 오류 수정(중복 제거 등).
+
+### 언제 올리는가 (bump 판단)
+
+**기준: "사용자가 체감할 변화"가 있으면 올린다.** 화면 표시, 동작, 데이터/콘텐츠, 눈에 보이는 스타일·레이아웃이 바뀌면 등급(MAJOR/MINOR/PATCH)에 맞춰 버전을 올린다.
+
+**올리지 않는 경우 (버전 유지):** 사용자 눈에 전혀 드러나지 않는 순수 내부·부수 변경.
+- 동작 불변 리팩터링(내부 구조/변수명 정리 등 렌더 결과 동일)
+- 주석, [CLAUDE.md](CLAUDE.md)·README 등 문서
+- 빌드/배포/도구 설정: `.gitignore`, `vercel.json`(배포 동작 변화 없을 때), `.claude/launch.json` 등
+- CI·포맷팅 등
+
+판단이 애매하면 "이 변경으로 사용자가 보거나 겪는 것이 달라지는가?"를 묻는다. 달라지면 올리고, 아니면 유지한다. 하나의 버전 bump가 관련된 여러 커밋을 묶어도 된다.
 
 ### 버전을 올릴 때 (반드시 함께 수정)
 
@@ -73,5 +88,4 @@ Cross-cutting subsystems:
 ## Conventions
 
 - UI text, comments, and identifiers are predominantly Korean; keep that convention when editing.
-- Data-model note: some code defensively reads `item.meaning || item.실상` (a legacy `실상` field), but no current `DB` entry uses `실상` — new entries should use `meaning`.
-- When adding quiz content, append objects to the `DB` array with all five fields; the dictionary counts, quiz pools, and multiple-choice distractors all derive from it automatically.
+- When adding quiz content, append objects to the `DB` array with all five fields (`type`, `idiom`, `meaning`, `chosung`, `keywords`); the dictionary counts, quiz pools, and multiple-choice distractors all derive from it automatically.
