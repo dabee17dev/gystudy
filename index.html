@@ -60,19 +60,6 @@
             transition: background 0.3s, color 0.3s;
         }
 
-        body {
-            font-family: 'Noto Sans KR', 'Inter', sans-serif;
-            background: var(--bg-body);
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden; /* Prevent browser scrollbar */
-            padding: 2rem 0;
-            transition: background 0.3s, color 0.3s;
-        }
-
         .container {
             position: relative;
             text-align: center;
@@ -741,8 +728,7 @@
             if (searchKeyword) {
                 filtered = filtered.filter(item => 
                     item.idiom.toLowerCase().includes(searchKeyword) || 
-                    (item.meaning && item.meaning.toLowerCase().includes(searchKeyword)) ||
-                    (item.실상 && item.실상.toLowerCase().includes(searchKeyword))
+                    (item.meaning && item.meaning.toLowerCase().includes(searchKeyword))
                 );
             }
 
@@ -751,7 +737,7 @@
                 html = '<div style="padding: 2rem; text-align: center; color: var(--text-dim);">검색 결과가 없습니다.</div>';
             } else {
                 filtered.forEach((item, index) => {
-                    const exactMeaning = item.meaning || item.실상;
+                    const exactMeaning = item.meaning;
                     html += `
                         <div class="dict-row">
                             <div class="dict-col-index">${index + 1}</div>
@@ -884,7 +870,7 @@
             inputField.value = '';
 
             let label = q.type === "속담" ? "속담" : "관용표현";
-            let exactMeaning = q.meaning || q.실상;
+            let exactMeaning = q.meaning;
 
             if (currentMode === 1) {
                 qText.innerText = `뜻: ${exactMeaning}\n\n이 뜻을 가진 ${label}은(는)?`;
@@ -897,7 +883,7 @@
                 
                 let options = [exactMeaning];
                 let others = shuffle([...DB].filter(item => item.idiom !== q.idiom)).slice(0, 3);
-                others.forEach(o => options.push(o.meaning || o.실상));
+                others.forEach(o => options.push(o.meaning));
                 options = shuffle(options);
                 
                 options.forEach(opt => {
@@ -950,7 +936,7 @@
             const feedback = document.getElementById('feedback-text');
             const info = document.getElementById('info-text');
             const q = currentQuestions[currentIndex];
-            const exactMeaning = q.meaning || q.실상;
+            const exactMeaning = q.meaning;
             
             if (isCorrect) {
                 score += (100 / totalRounds); // 총 문항 수에 비례한 점수
