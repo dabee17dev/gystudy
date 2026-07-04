@@ -259,16 +259,16 @@
             font-weight: 500;
             opacity: 0.8;
             pointer-events: none;
+            text-align: right;
         }
 
         /* Version Tag */
         .version-tag {
-            margin-top: 1.5rem;
-            color: var(--text-dim);
-            font-size: 0.8rem;
+            margin-top: 2px;
+            font-size: 0.7rem;
             font-weight: 500;
             letter-spacing: 0.05em;
-            opacity: 0.7;
+            opacity: 0.75;
         }
 
         /* Tabs */
@@ -407,7 +407,10 @@
         <button class="settings-btn" id="global-settings-btn" title="설정" onclick="showSettings()">⚙️</button>
 
         <!-- Creator Info -->
-        <div class="creator-info">by. 청아초 삼다수반</div>
+        <div class="creator-info">
+            <div>by. 청아초 삼다수반</div>
+            <div class="version-tag" id="app-version"></div>
+        </div>
 
         <!-- Main Menu -->
         <div class="container" id="main-menu">
@@ -420,8 +423,6 @@
             <button class="menu-btn" onclick="openSetup(2)">2. 단어 보고 뜻 맞추기 (객관식)</button>
             <button class="menu-btn" onclick="openSetup(3)">3. 초성 퀴즈 (주관식)</button>
             <button class="menu-btn" onclick="openSetup(4)">4. 뜻 적기 퀴즈 (키워드 주관식)</button>
-
-            <p class="version-tag" id="app-version"></p>
         </div>
 
         <!-- Settings Area -->
