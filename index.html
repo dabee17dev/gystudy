@@ -47,9 +47,6 @@
             font-size: 16px;
         }
 
-        /* BGM 오디오 요소는 JS로만 제어 — 레이아웃 공간 차지 방지 */
-        #bgm { display: none; }
-
         body {
             font-family: 'Noto Sans KR', 'Inter', sans-serif;
             background: var(--bg-body);
@@ -456,9 +453,6 @@
 </head>
 <body>
     <div id="app">
-        <!-- BGM Audio Element -->
-        <audio id="bgm" loop src="bgm.mp3"></audio>
-
         <!-- Settings Button -->
         <button class="settings-btn" id="global-settings-btn" title="설정" onclick="showSettings()">⚙️</button>
 
@@ -485,20 +479,6 @@
         <div class="container" id="settings-area" style="max-width: 600px; height: 45rem; max-height: 90vh; padding: 4rem 3rem; overflow-y: auto;">
             <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; background: -webkit-linear-gradient(45deg, #6366f1, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"><span style="-webkit-text-fill-color: initial; background: none;">⚙️</span> 환경 설정</h2>
             <p style="margin-bottom: 1.5rem; color: var(--text-dim);">앱의 테마와 환경을 설정할 수 있습니다.</p>
-            
-            <div class="settings-item" style="flex-direction: column; align-items: flex-start;">
-                <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.5rem;">
-                    <span>🎵 배경 음악 볼륨 (<span id="bgm-vol-val">0</span>%)</span>
-                </div>
-                <input type="range" id="bgm-slider" min="0" max="100" value="0" style="width: 100%; cursor: pointer;" oninput="changeBGMVolume(this.value)">
-            </div>
-
-            <div class="settings-item" style="flex-direction: column; align-items: flex-start;">
-                <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.5rem;">
-                    <span>🔊 효과음 볼륨 (<span id="sfx-vol-val">100</span>%)</span>
-                </div>
-                <input type="range" id="sfx-slider" min="0" max="100" value="100" style="width: 100%; cursor: pointer;" oninput="changeSFXVolume(this.value)">
-            </div>
 
             <div class="settings-item">
                 <span>🎨 화면 테마 (다크/라이트)</span>
@@ -604,7 +584,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.1.2";
+        const APP_VERSION = "2.0.0";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -673,9 +653,7 @@
         function saveSettings() {
             try {
                 localStorage.setItem(SETTINGS_KEY, JSON.stringify({
-                    isDarkMode,
-                    bgmVolume: Math.round(bgmVolume * 100),
-                    sfxVolume: Math.round(sfxVolume * 100)
+                    isDarkMode
                 }));
             } catch (e) { /* localStorage 미지원/차단 시 무시 */ }
         }
@@ -692,15 +670,6 @@
                 isDarkMode = true;
                 document.body.setAttribute('data-theme', 'dark');
                 document.getElementById('theme-toggle-btn').innerText = '라이트 모드로 변경';
-            }
-            // 볼륨 복원 (슬라이더/라벨/실제 볼륨 반영)
-            if (typeof saved.sfxVolume === 'number') {
-                document.getElementById('sfx-slider').value = saved.sfxVolume;
-                changeSFXVolume(saved.sfxVolume);
-            }
-            if (typeof saved.bgmVolume === 'number') {
-                document.getElementById('bgm-slider').value = saved.bgmVolume;
-                changeBGMVolume(saved.bgmVolume);
             }
         }
 
@@ -720,66 +689,6 @@
             }
             saveSettings();
         }
-
-        let bgmVolume = 0;
-        function changeBGMVolume(val) {
-            bgmVolume = val / 100;
-            document.getElementById('bgm-vol-val').innerText = val;
-            const bgm = document.getElementById('bgm');
-            bgm.volume = bgmVolume;
-            
-            if (bgmVolume > 0 && bgm.paused) {
-                bgm.play().catch((e) => {
-                    // Ignore autoplay errors if user hasn't interacted enough
-                });
-            } else if (bgmVolume === 0 && !bgm.paused) {
-                bgm.pause();
-            }
-            saveSettings();
-        }
-
-        let sfxVolume = 1.0;
-        let audioCtx = null;
-        function changeSFXVolume(val) {
-            sfxVolume = val / 100;
-            document.getElementById('sfx-vol-val').innerText = val;
-            saveSettings();
-        }
-
-        function playSound(type) {
-            if (sfxVolume <= 0) return;
-            try {
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                
-                let baseVol = sfxVolume * 0.1; // 스케일 조정
-                
-                if (type === 'correct') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime); // E5
-                    osc.frequency.setValueAtTime(880.00, audioCtx.currentTime + 0.1); // A5
-                    gain.gain.setValueAtTime(baseVol, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.3);
-                } else {
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-                    osc.frequency.setValueAtTime(100, audioCtx.currentTime + 0.15);
-                    gain.gain.setValueAtTime(baseVol, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.3);
-                }
-            } catch (e) {}
-        }
-
-
 
         function showSettings() {
             document.getElementById('main-menu').style.display = 'none';
@@ -1055,7 +964,6 @@
                 document.getElementById('score-display').innerText = `점수: ${Math.round(score)}`;
                 feedback.innerText = '정답입니다! 🎉';
                 feedback.className = 'feedback correct';
-                playSound('correct');
             } else {
                 if (isTimeOut) {
                     feedback.innerText = '시간 초과! ⏳';
@@ -1063,7 +971,6 @@
                     feedback.innerText = '틀렸습니다! 😢';
                 }
                 feedback.className = 'feedback incorrect';
-                playSound('incorrect');
             }
 
             if (currentMode === 1 || currentMode === 3) {
