@@ -48,6 +48,28 @@ Cross-cutting subsystems:
 - **Audio**: BGM plays through the `#bgm` `<audio>` element; SFX (correct/incorrect) are synthesized on the fly with the Web Audio API in `playSound` (no sound files).
 - **Dictionary (도감)**: `showDict` opens a searchable, tabbed browser over `DB` filtered by `type`, rendered by `renderDictList`.
 
+## 버전 관리 (Versioning)
+
+이 프로젝트는 **유의적 버전(Semantic Versioning, `MAJOR.MINOR.PATCH`)** 을 따른다.
+
+- **MAJOR** — 하위 호환이 깨지는 변경. 예: `DB` 항목 스키마 변경(필드 추가/삭제/의미 변경), 저장 데이터(`localStorage` 등) 포맷 변경, 기존 동작을 바꾸는 대규모 개편.
+- **MINOR** — 하위 호환되는 기능 추가. 예: 새 퀴즈 모드, 새 설정 항목, `DB`에 새 관용어/속담 추가.
+- **PATCH** — 하위 호환되는 버그 수정·문구 수정·스타일 조정·리팩터링(동작 불변).
+
+### 버전을 올릴 때 (반드시 함께 수정)
+
+버전 문자열은 **두 곳**에 있으며 항상 동일하게 유지해야 한다:
+
+1. [package.json](package.json) 의 `"version"` — 배포/패키지 기준의 단일 소스.
+2. [index.html](index.html) 스크립트 상단의 `const APP_VERSION` — 화면 하단(메인 메뉴)에 `v1.0.0` 형태로 표기되는 값.
+
+둘 중 하나만 바꾸면 표기가 어긋나므로 커밋 전 두 값이 일치하는지 확인한다.
+
+### 릴리스 관례
+
+- 버전을 올리는 커밋 후 해당 커밋에 git 태그를 단다: `git tag v1.2.0 && git push origin v1.2.0`.
+- 태그명은 `v` 접두사 + 버전(`vMAJOR.MINOR.PATCH`) 형식.
+
 ## Conventions
 
 - UI text, comments, and identifiers are predominantly Korean; keep that convention when editing.
