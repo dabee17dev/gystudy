@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관용표현 & 속담 퀴즈</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&family=Noto+Sans+KR:wght@300;500;700&family=Nanum+Myeongjo:wght@400;700;800&display=swap');
+
+        :root {
+            /* Light Theme (Default) */
+            --bg-body: #f3f4f6;
+            --bg-container: #ffffff;
+            --bg-input: #f9fafb;
+            --bg-btn: #f3f4f6;
+            --bg-btn-hover: #e5e7eb;
+            --bg-dict-list: #fafafa;
+            --border-color: #e5e7eb;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --text-dim: #9ca3af;
+            --highlight: #d97706;
+        }
+
+        [data-theme="dark"] {
+            /* Dark Theme */
+            --bg-body: #0a0a0a;
+            --bg-container: #121212;
+            --bg-input: #1e1e1e;
+            --bg-btn: #1e1e1e;
+            --bg-btn-hover: #2a2a2a;
+            --bg-dict-list: #0f0f0f;
+            --border-color: #333;
+            --text-main: #ffffff;
+            --text-muted: #888;
+            --text-dim: #666;
+            --highlight: #f3ec78;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', 'Inter', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden; /* Prevent browser scrollbar */
+            padding: 2rem 0;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', 'Inter', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden; /* Prevent browser scrollbar */
+            padding: 2rem 0;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .container {
+            position: relative;
+            text-align: center;
+            background: var(--bg-container);
+            padding: 3rem 4rem;
+            border-radius: 1rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+            width: 50rem;
+            max-width: 95vw;
+            height: 48.75rem;
+            max-height: 90vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            animation: fadeIn 0.5s ease-out;
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .container::-webkit-scrollbar { width: 8px; }
+        .container::-webkit-scrollbar-track { background: transparent; }
+        .container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+
+        /* Dictionary & Settings Modal Style */
+        .dict-container {
+            background: var(--bg-container);
+            border-radius: 1rem;
+            border: 1px solid var(--border-color);
+            width: 50rem;
+            max-width: 95vw;
+            height: 55rem;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+            text-align: left;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease-out;
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: -webkit-linear-gradient(45deg, #d97706, #be123c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        [data-theme="dark"] h1 {
+            background: -webkit-linear-gradient(45deg, #f3ec78, #af4261);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Buttons */
+        .menu-btn, .option-btn, .action-btn {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-main);
+            background: var(--bg-btn);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .menu-btn:hover, .option-btn:hover, .action-btn:hover {
+            background: var(--bg-btn-hover);
+            transform: translateY(-2px);
+        }
+
+        .input-box {
+            width: 100%;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-size: 1.1rem;
+            color: var(--text-main);
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            outline: none;
+            transition: background 0.3s, border-color 0.3s, color 0.3s;
+        }
+
+        .input-box::placeholder {
+            color: var(--text-dim);
+        }
+
+        #game-area, #result-area, #dict-area, #settings-area, #setup-area {
+            display: none;
+        }
+
+        /* Game Area specific */
+        .question {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        .feedback { margin-top: 1rem; font-size: 1.1rem; font-weight: bold; min-height: 1.5rem; }
+        .correct { color: #16a34a; }
+        [data-theme="dark"] .correct { color: #4ade80; }
+        .incorrect { color: #dc2626; }
+        [data-theme="dark"] .incorrect { color: #f87171; }
+        
+        .info { color: #2563eb; margin-top: 0.5rem; font-size: 0.95rem; font-weight: normal; }
+        [data-theme="dark"] .info { color: #60a5fa; }
+        
+        .header { display: flex; justify-content: space-between; margin-bottom: 2rem; font-size: 1rem; color: var(--text-dim); }
+
+        /* Dictionary Area specific */
+        .dict-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .dict-badge {
+            background: var(--text-main);
+            color: var(--bg-container);
+            font-size: 0.75rem;
+            font-weight: 900;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .dict-subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        .dict-title-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .dict-title-row h2 {
+            font-size: 2rem;
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Close Button (X icon) */
+        .close-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: transparent;
+            color: var(--text-dim);
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s, transform 0.3s;
+        }
+        .close-btn:hover {
+            color: #ef4444; /* red */
+            transform: scale(1.1);
+        }
+
+        /* Settings Button */
+        .settings-btn {
+            position: fixed;
+            bottom: 1.5rem;
+            left: 1.5rem;
+            background: transparent;
+            color: var(--text-dim);
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        .settings-btn:hover {
+            color: var(--text-main);
+            transform: rotate(45deg);
+        }
+
+        /* Creator Info */
+        .creator-info {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            font-weight: 500;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        /* Tabs */
+        .dict-tabs {
+            display: flex;
+            background: var(--bg-input);
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 1rem;
+        }
+        .dict-tab {
+            flex: 1 1 50%;
+            width: 50%;
+            padding: 0.8rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+        .dict-tab.active {
+            background: var(--text-main);
+            color: var(--bg-container);
+        }
+
+        /* Search */
+        .dict-search {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            outline: none;
+        }
+        .dict-search::placeholder {
+            color: var(--text-dim);
+        }
+
+        /* Table/List */
+        .dict-list-container {
+            flex: 1;
+            overflow-y: scroll;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-dict-list);
+        }
+        .dict-list-container::-webkit-scrollbar { width: 8px; }
+        .dict-list-container::-webkit-scrollbar-track { background: var(--bg-container); }
+        .dict-list-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+
+        .dict-row {
+            display: flex;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            align-items: flex-start;
+        }
+        .dict-row:last-child {
+            border-bottom: none;
+        }
+        .dict-col-index {
+            width: 3rem;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .dict-col-word {
+            width: 35%;
+            color: var(--text-main);
+            font-weight: bold;
+            font-size: 1rem;
+            padding-right: 1rem;
+            flex-shrink: 0;
+        }
+        .dict-divider {
+            width: 1px;
+            background: var(--border-color);
+            height: 1.5rem;
+            margin: 0 1rem;
+            flex-shrink: 0;
+        }
+        .dict-col-meaning {
+            flex: 1;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        /* Close Button */
+        .dict-close-btn {
+            width: 100%;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            background: var(--text-main);
+            color: var(--bg-container);
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s, opacity 0.2s;
+        }
+        .dict-close-btn:hover {
+            opacity: 0.8;
+        }
+        
+        /* Settings Switches */
+        .settings-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 1.5rem;
+            background: var(--bg-input);
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        .settings-item span {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- BGM Audio Element -->
+        <audio id="bgm" loop src="bgm.mp3"></audio>
+
+        <!-- Settings Button -->
+        <button class="settings-btn" id="global-settings-btn" title="설정" onclick="showSettings()">⚙️</button>
+
+        <!-- Creator Info -->
+        <div class="creator-info">by. 청아초 삼다수반</div>
+
+        <!-- Main Menu -->
+        <div class="container" id="main-menu">
+            <h1>관용표현 & 속담 퀴즈</h1>
+            <p style="margin-bottom: 2rem; color: var(--text-dim);">재미있게 배우는 우리말 관용표현과 속담!</p>
+            
+            <button class="menu-btn" style="border-color: var(--highlight); margin-bottom: 2rem; color: var(--highlight);" onclick="showDict()">📚 관용표현 사전</button>
+
+            <button class="menu-btn" onclick="openSetup(1)">1. 뜻 보고 맞추기 (주관식)</button>
+            <button class="menu-btn" onclick="openSetup(2)">2. 단어 보고 뜻 맞추기 (객관식)</button>
+            <button class="menu-btn" onclick="openSetup(3)">3. 초성 퀴즈 (주관식)</button>
+            <button class="menu-btn" onclick="openSetup(4)">4. 뜻 적기 퀴즈 (키워드 주관식)</button>
+        </div>
+
+        <!-- Settings Area -->
+        <div class="container" id="settings-area" style="max-width: 600px; height: 45rem; max-height: 90vh; padding: 4rem 3rem; overflow-y: auto;">
+            <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; background: -webkit-linear-gradient(45deg, #6366f1, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"><span style="-webkit-text-fill-color: initial; background: none;">⚙️</span> 환경 설정</h2>
+            <p style="margin-bottom: 1.5rem; color: var(--text-dim);">앱의 테마와 환경을 설정할 수 있습니다.</p>
+            
+            <div class="settings-item" style="flex-direction: column; align-items: flex-start;">
+                <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.5rem;">
+                    <span>🎵 배경 음악 볼륨 (<span id="bgm-vol-val">0</span>%)</span>
+                </div>
+                <input type="range" id="bgm-slider" min="0" max="100" value="0" style="width: 100%; cursor: pointer;" oninput="changeBGMVolume(this.value)">
+            </div>
+
+            <div class="settings-item" style="flex-direction: column; align-items: flex-start;">
+                <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.5rem;">
+                    <span>🔊 효과음 볼륨 (<span id="sfx-vol-val">100</span>%)</span>
+                </div>
+                <input type="range" id="sfx-slider" min="0" max="100" value="100" style="width: 100%; cursor: pointer;" oninput="changeSFXVolume(this.value)">
+            </div>
+
+            <div class="settings-item">
+                <span>🎨 화면 테마 (다크/라이트)</span>
+                <button class="action-btn" style="width: auto; padding: 0.5rem 1.5rem;" onclick="toggleTheme()" id="theme-toggle-btn">다크 모드로 변경</button>
+            </div>
+
+
+
+            <button class="menu-btn" style="margin-top: 2rem;" onclick="hideSettings()">저장 및 닫기</button>
+        </div>
+
+        <!-- Dictionary (도감) Area -->
+        <div class="dict-container" id="dict-area">
+            <div class="dict-header">
+                <span class="dict-badge">DICT</span>
+                <span class="dict-subtitle">— 속담 + 관용어</span>
+            </div>
+            
+            <div class="dict-title-row">
+                <h2>📚 <span id="dict-main-title">속담 사전</span></h2>
+            </div>
+
+            <div class="dict-tabs">
+                <div class="dict-tab active" id="tab-proverb" onclick="switchTab('속담')">속담 (<span id="count-proverb">0</span>)</div>
+                <div class="dict-tab" id="tab-idiom" onclick="switchTab('관용어')">관용어 (<span id="count-idiom">0</span>)</div>
+            </div>
+
+            <input type="text" class="dict-search" id="dict-search-input" placeholder="🔍 검색 (예: 가는, 호랑이, 마음)" oninput="renderDictList()">
+
+            <div class="dict-list-container" id="dict-list">
+                <!-- 동적으로 채워짐 -->
+            </div>
+
+            <button class="dict-close-btn" onclick="hideDict()">닫기</button>
+        </div>
+
+        <!-- Setup Area -->
+        <div class="container" id="setup-area">
+            <button class="close-btn" onclick="hideSetup()">✕</button>
+            <h2 style="font-size: 2rem; margin-bottom: 1rem;">🕹️ 게임 세부 설정</h2>
+            
+            <div style="text-align: left; margin-bottom: 1.5rem;">
+                <label style="font-weight: bold; display: block; margin-bottom: 0.5rem;">👤 플레이어 닉네임</label>
+                <input type="text" id="setup-nickname" class="input-box" placeholder="이름을 입력하세요 (미입력 시 '플레이어')" style="margin: 0;">
+            </div>
+
+            <div style="text-align: left; margin-bottom: 1.5rem;">
+                <label style="font-weight: bold; display: block; margin-bottom: 0.5rem;">⏳ 제한시간 (문제당)</label>
+                <select id="setup-time" class="input-box" style="margin: 0; cursor: pointer;">
+                    <option value="0">무제한</option>
+                    <option value="5">5초</option>
+                    <option value="10" selected>10초</option>
+                    <option value="15">15초</option>
+                </select>
+            </div>
+
+            <div style="text-align: left; margin-bottom: 2rem;">
+                <label style="font-weight: bold; display: block; margin-bottom: 0.5rem;">🎯 문제 수 (라운드)</label>
+                <select id="setup-rounds" class="input-box" style="margin: 0; cursor: pointer;">
+                    <option value="5" selected>5문제</option>
+                    <option value="10">10문제</option>
+                    <option value="15">15문제</option>
+                    <option value="all">전체 다 풀기</option>
+                </select>
+            </div>
+
+            <button class="menu-btn" style="background: var(--highlight); color: white; border: none; font-size: 1.2rem; font-weight: bold; padding: 1.2rem;" onclick="executeGameStart()">🚀 게임 시작!</button>
+        </div>
+
+        <!-- Game Area -->
+        <div class="container" id="game-area">
+            <button class="close-btn" title="게임 종료" onclick="goHome()">✖</button>
+            <div class="header">
+                <span id="score-display">점수: 0</span>
+                <span id="timer-display" style="font-weight: bold; color: #ef4444; font-size: 1.2rem; display: none;">남은 시간: <span id="time-left">10</span>초</span>
+                <span id="progress-display">1 / 5</span>
+            </div>
+            <div id="question-text" class="question">질문 내용</div>
+            
+            <div id="input-section" style="display: none;">
+                <input type="text" id="answer-input" class="input-box" placeholder="정답을 입력하세요" onkeypress="if(event.key === 'Enter') submitAnswer()">
+                <button class="action-btn" onclick="submitAnswer()">확인</button>
+            </div>
+            
+            <div id="options-section" style="display: none;">
+                <!-- 객관식 버튼들이 동적으로 추가됨 -->
+            </div>
+
+            <div id="feedback-text" class="feedback"></div>
+            <div id="info-text" class="info"></div>
+            
+            <button id="next-btn" class="action-btn" style="display: none; margin-top: 1rem; background: #3b82f6;" onclick="nextQuestion()">다음 문제</button>
+        </div>
+
+        <!-- Result Area -->
+        <div class="container" id="result-area">
+            <h1>게임 종료!</h1>
+            <p id="final-score" style="font-size: 1.5rem; margin-bottom: 2rem;"></p>
+            <button class="action-btn" onclick="goHome()">메인으로 돌아가기</button>
+        </div>
+    </div>
+
+    <script>
+        const DB = [
+            // 관용어 (음슴체 및 간소화)
+            { type: "관용어", idiom: "발목을 잡다", meaning: "어떤 일에 얽매여 못 벗어남", chosung: "ㅂㅁㅇ ㅈㄷ", keywords: ["얽매여", "벗어나", "못하게", "방해"] },
+            { type: "관용어", idiom: "미역국을 먹다", meaning: "시험이나 직장에서 떨어짐", chosung: "ㅁㅇㄱㅇ ㅁㄷ", keywords: ["떨어지", "쫓겨나", "낙방", "불합격", "해고"] },
+            { type: "관용어", idiom: "귀가 얇다", meaning: "남의 말을 쉽게 믿음", chosung: "ㄱㄱ ㅇㄷ", keywords: ["남", "말", "쉽게", "받아들이", "믿다", "솔깃"] },
+            { type: "관용어", idiom: "눈코 뜰 새 없다", meaning: "매우 바쁨", chosung: "ㄴㅋ ㄸ ㅅ ㅇㄷ", keywords: ["바쁘", "바빠", "정신없이"] },
+            { type: "관용어", idiom: "입이 무겁다", meaning: "비밀을 잘 지킴", chosung: "ㅇㅇ ㅁㄱㄷ", keywords: ["비밀", "지키", "발설"] },
+            { type: "관용어", idiom: "간에 기별도 안 가다", meaning: "먹은 양이 너무 적음", chosung: "ㄱㅇ ㄱㅂㄷ ㅇ ㄱㄷ", keywords: ["적어", "적다", "먹은 것 같지", "부족"] },
+            { type: "관용어", idiom: "손이 크다", meaning: "씀씀이가 큼", chosung: "ㅅㅇ ㅋㄷ", keywords: ["씀씀이", "후하", "크다", "많이", "풍족"] },
+            { type: "관용어", idiom: "손을 씻다", meaning: "나쁜 일에서 손을 뗌", chosung: "ㅅㅇ ㅆㄷ", keywords: ["나쁜 일", "인연", "끊다", "그만두다"] },
+            { type: "관용어", idiom: "입술에 침이나 바르지", meaning: "뻔뻔하게 거짓말함", chosung: "ㅇㅅㅇ ㅊㅇㄴ ㅂㄹㅈ", keywords: ["뻔뻔하게", "거짓말", "능청"] },
+            { type: "관용어", idiom: "귀에 못이 박히다", meaning: "같은 말을 지겹게 들음", chosung: "ㄱㅇ ㅁㅇ ㅂㅎㄷ", keywords: ["같은 말", "여러 번", "반복", "자주", "듣다"] },
+            { type: "관용어", idiom: "가슴에 못을 박다", meaning: "남에게 큰 상처를 줌", chosung: "ㄱㅅㅇ ㅁㅇ ㅂㄷ", keywords: ["원통한", "마음", "상처", "아프게"] },
+            { type: "관용어", idiom: "배가 아프다", meaning: "남 잘되는 걸 질투함", chosung: "ㅂㄱ ㅇㅍㄷ", keywords: ["남이 잘되는", "질투", "시기"] },
+            { type: "관용어", idiom: "발이 넓다", meaning: "아는 사람이 많음", chosung: "ㅂㅇ ㄴㄷ", keywords: ["아는 사람", "많고", "사교성", "인맥"] },
+            { type: "관용어", idiom: "손발이 맞다", meaning: "마음이나 의견이 서로 맞음", chosung: "ㅅㅂㅇ ㅁㄷ", keywords: ["마음", "의견", "서로 맞음", "호흡"] },
+            { type: "관용어", idiom: "발 벗고 나서다", meaning: "어떤 일에 적극적으로 나섬", chosung: "ㅂ ㅂㄱ ㄴㅅㄷ", keywords: ["적극적", "나서다", "앞장서다"] },
+            { type: "관용어", idiom: "손에 땀을 쥐다", meaning: "몹시 아슬아슬함", chosung: "ㅅㅇ ㄸㅇ ㅈㄷ", keywords: ["아슬아슬", "긴장", "조마조마"] },
+            { type: "관용어", idiom: "귀가 가렵다", meaning: "남이 내 이야기를 하는 것 같음", chosung: "ㄱㄱ ㄱㄹㄷ", keywords: ["남이 내 이야기", "뒷담화"] },
+            { type: "관용어", idiom: "눈이 높다", meaning: "물건을 고르는 기준이 높음", chosung: "ㄴㅇ ㄴㄷ", keywords: ["고르는 기준", "높음", "까다롭다"] },
+            { type: "관용어", idiom: "입을 모으다", meaning: "여러 사람이 같은 의견을 냄", chosung: "ㅇㅇ ㅁㅇㄷ", keywords: ["여러 사람", "같은 의견", "일치"] },
+            { type: "관용어", idiom: "코가 납작해지다", meaning: "무안을 당해 기가 죽음", chosung: "ㅋㄱ ㄴㅈㅎㅈㄷ", keywords: ["무안", "기가 죽음", "창피"] },
+            { type: "관용어", idiom: "바가지를 긁다", meaning: "아내가 남편에게 잔소리함", chosung: "ㅂㄱㅈㄹ ㄱㄷ", keywords: ["아내", "남편", "잔소리"] },
+            { type: "관용어", idiom: "허리띠를 졸라매다", meaning: "마음먹고 몹시 절약함", chosung: "ㅎㄹㄸㄹ ㅈㄹㅁㄷ", keywords: ["절약", "아끼다", "검소"] },
+            { type: "관용어", idiom: "색안경을 끼고 보다", meaning: "편견을 가지고 봄", chosung: "ㅅㅇㄱㅇ ㄲㄱ ㅂㄷ", keywords: ["편견", "선입견"] },
+            { type: "관용어", idiom: "발등에 불이 떨어지다", meaning: "일이 몹시 다급해짐", chosung: "ㅂㄷㅇ ㅂㅇ ㄸㅇㅈㄷ", keywords: ["다급", "촉박", "급해"] },
+            { type: "관용어", idiom: "가슴에 못을 박다", meaning: "마음에 깊은 상처를 주다", chosung: "ㄱㅅㅇ ㅁㅇ ㅂㄷ", keywords: ["마음", "깊은", "상처"] },
+            { type: "관용어", idiom: "간이 콩알만 해지다", meaning: "몹시 두려워지다", chosung: "ㄱㅇ ㅋㅇㅁ ㅎㅈㄷ", keywords: ["두려워", "무서워", "놀라다"] },
+            { type: "관용어", idiom: "국수를 먹다", meaning: "결혼식을 올리다", chosung: "ㄱㅅㄹ ㅁㄷ", keywords: ["결혼", "혼례", "잔치"] },
+            { type: "관용어", idiom: "눈먼 돈", meaning: "임자가 없는 돈", chosung: "ㄴㅁ ㄷ", keywords: ["임자", "없는", "공돈"] },
+            { type: "관용어", idiom: "마각을 드러내다", meaning: "숨기고 있던 일이나 정체가 드러남", chosung: "ㅁㄱㅇ ㄷㄹㄴㄷ", keywords: ["숨기고", "정체", "비밀"] },
+            { type: "관용어", idiom: "발목을 잡히다", meaning: "어떤 일에 얽매여 벗어나지 못하다", chosung: "ㅂㅁㅇ ㅈㅎㄷ", keywords: ["얽매여", "벗어나지", "약점"] },
+            { type: "관용어", idiom: "코 묻은 돈", meaning: "어린아이가 가진 적은 돈", chosung: "ㅋ ㅁㅇ ㄷ", keywords: ["어린아이", "적은", "푼돈"] },
+            { type: "관용어", idiom: "피도 눈물도 없다", meaning: "인정이나 동정심이 전혀 없다", chosung: "ㅍㄷ ㄴㅁㄷ ㅇㄷ", keywords: ["인정", "동정심", "냉혹하다"] },
+            { type: "관용어", idiom: "한 우물을 파다", meaning: "한 가지 일에만 몰두하다", chosung: "ㅎ ㅇㅁㅇ ㅍㄷ", keywords: ["한 가지", "몰두", "집중"] },
+            { type: "관용어", idiom: "입술을 깨물다", meaning: "화나 슬픔 등을 억누르며 참다", chosung: "ㅇㅅㅇ ㄲㅁㄷ", keywords: ["화", "슬픔", "억누르며"] },
+            
+            // 속담 (음슴체 및 간소화)
+            { type: "속담", idiom: "가는 날이 장날", meaning: "뜻하지 않은 일이 우연히 일어남", chosung: "ㄱㄴ ㄴㅇ ㅈㄴ", keywords: ["뜻하지 않은", "공교롭게", "우연히", "마침"] },
+            { type: "속담", idiom: "가는 말이 고와야 오는 말이 곱다", meaning: "내가 잘해야 남도 잘해줌", chosung: "ㄱㄴ ㅁㅇ ㄱㅇㅇ ㅇㄴ ㅁㅇ ㄱㄷ", keywords: ["내가 좋게", "남도 좋게"] },
+            { type: "속담", idiom: "가재는 게 편이다", meaning: "비슷한 부류끼리 편듦", chosung: "ㄱㅈㄴ ㄱ ㅍㅇㄷ", keywords: ["비슷한", "편이 되어", "어울림"] },
+            { type: "속담", idiom: "소 잃고 외양간 고친다", meaning: "늦은 후회는 소용없음", chosung: "ㅅ ㅇㅋ ㅇㅇㄱ ㄱㅊㄷ", keywords: ["잘못된 뒤", "소용", "늦었다", "이미"] },
+            { type: "속담", idiom: "원숭이도 나무에서 떨어진다", meaning: "잘하는 사람도 실수함", chosung: "ㅇㅅㅇㄷ ㄴㅁㅇㅅ ㄸㅇㅈㄷ", keywords: ["익숙하고", "잘하는", "실수", "실패"] },
+            { type: "속담", idiom: "천 리 길도 한 걸음부터", meaning: "무슨 일이든 시작이 중요함", chosung: "ㅊ ㄹ ㄱㄷ ㅎ ㄱㅇㅂㅌ", keywords: ["시작", "처음", "중요"] },
+            { type: "속담", idiom: "누워서 침 뱉기", meaning: "남을 해치려다 내가 당함", chosung: "ㄴㅇㅅ ㅊ ㅂㄱ", keywords: ["해치려다가", "자기", "해를 입"] },
+            { type: "속담", idiom: "우물 안 개구리", meaning: "좁은 세상만 앎", chosung: "ㅇㅁ ㅇ ㄱㄱㄹ", keywords: ["세상을 알지 못하고", "좁은", "견문", "자기만"] },
+            { type: "속담", idiom: "고래 싸움에 새우 등 터진다", meaning: "강자들 싸움에 약자가 피해 봄", chosung: "ㄱㄹ ㅆㅇㅇ ㅅㅇ ㄷ ㅌㅈㄷ", keywords: ["강한 자", "싸우는", "약한 자", "피해"] },
+            { type: "속담", idiom: "사공이 많으면 배가 산으로 간다", meaning: "주장이 많으면 일 망침", chosung: "ㅅㄱㅇ ㅁㅇㅁ ㅂㄱ ㅅㅇㄹ ㄱㄷ", keywords: ["자기주장", "내세우면", "어렵다", "방향", "잃는다"] },
+            { type: "속담", idiom: "돌다리도 두들겨 보고 건너라", meaning: "아는 일도 조심함", chosung: "ㄷㄷㄹㄷ ㄷㄷㄱ ㅂㄱ ㄱㄴㄹ", keywords: ["아는 일이라도", "세심하게", "주의", "조심"] },
+            { type: "속담", idiom: "발 없는 말이 천 리 간다", meaning: "말은 순식간에 퍼짐", chosung: "ㅂ ㅇㄴ ㅁㅇ ㅊ ㄹ ㄱㄷ", keywords: ["순식간에", "멀리", "퍼져", "조심"] },
+            { type: "속담", idiom: "남의 떡이 더 커 보인다", meaning: "내 것보다 남의 것이 더 좋아 보임", chosung: "ㄴㅇ ㄸㅇ ㄷ ㅋ ㅂㅇㄷ", keywords: ["내 것", "남의 것", "좋아 보임"] },
+            { type: "속담", idiom: "달면 삼키고 쓰면 뱉는다", meaning: "자신에게 이로우면 취하고 해로우면 버림", chosung: "ㄷㅁ ㅅㅋㄱ ㅆㅁ ㅂㄴㄷ", keywords: ["이로우면", "취하고", "해로우면", "버림"] },
+            { type: "속담", idiom: "똥 묻은 개가 겨 묻은 개 나무란다", meaning: "자기 잘못은 모르고 남의 작은 잘못을 흉봄", chosung: "ㄸ ㅁㅇ ㄱㄱ ㄱ ㅁㅇ ㄱ ㄴㅁㄹㄷ", keywords: ["자기 잘못", "남의 작은", "흉봄"] },
+            { type: "속담", idiom: "벼는 익을수록 고개를 숙인다", meaning: "교양 있고 배운 사람일수록 겸손함", chosung: "ㅂㄴ ㅇㅇㅅㄹ ㄱㄱㄹ ㅅㅇㄷ", keywords: ["교양", "배운", "겸손"] },
+            { type: "속담", idiom: "사촌이 땅을 사면 배가 아프다", meaning: "남이 잘되는 것을 시기함", chosung: "ㅅㅊㅇ ㄸㅇ ㅅㅁ ㅂㄱ ㅇㅍㄷ", keywords: ["남이", "잘되는", "시기"] },
+            { type: "속담", idiom: "세 살 버릇 여든까지 간다", meaning: "어릴 때 든 버릇은 고치기 힘듦", chosung: "ㅅ ㅅ ㅂㄹ ㅇㄷㄲㅈ ㄱㄷ", keywords: ["어릴 때", "버릇", "고치기 힘"] },
+            { type: "속담", idiom: "아는 길도 물어 가라", meaning: "쉬운 일도 신중하게 처리해야 함", chosung: "ㅇㄴ ㄱㄷ ㅁㅇ ㄱㄹ", keywords: ["쉬운 일", "신중하게", "조심"] },
+            { type: "속담", idiom: "열 길 물속은 알아도 한 길 사람 속은 모른다", meaning: "사람의 마음은 헤아리기 힘듦", chosung: "ㅇ ㄱ ㅁㅅㅇ ㅇㅇㄷ ㅎ ㄱ ㅅㄹ ㅅㅇ ㅁㄹㄷ", keywords: ["사람의", "마음", "헤아리기", "어려움"] },
+            { type: "속담", idiom: "지렁이도 밟으면 꿈틀한다", meaning: "순하고 약한 사람도 괴롭히면 반항함", chosung: "ㅈㄹㅇㄷ ㅂㅇㅁ ㄲㅌㅎㄷ", keywords: ["순하고", "약한", "반항"] },
+            { type: "속담", idiom: "하룻강아지 범 무서운 줄 모른다", meaning: "철없이 함부로 덤비는 사람을 비유", chosung: "ㅎㄹㄱㅇㅈ ㅂ ㅁㅅㅇ ㅈ ㅁㄹㄷ", keywords: ["철없이", "함부로", "덤비는"] }
+        ];
+
+        // ---- Settings Theme & Logic ----
+        let isDarkMode = false;
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.getElementById('theme-toggle-btn');
+            
+            isDarkMode = !isDarkMode;
+            if (isDarkMode) {
+                body.setAttribute('data-theme', 'dark');
+                btn.innerText = '라이트 모드로 변경';
+            } else {
+                body.removeAttribute('data-theme');
+                btn.innerText = '다크 모드로 변경';
+            }
+        }
+
+        let bgmVolume = 0;
+        function changeBGMVolume(val) {
+            bgmVolume = val / 100;
+            document.getElementById('bgm-vol-val').innerText = val;
+            const bgm = document.getElementById('bgm');
+            bgm.volume = bgmVolume;
+            
+            if (bgmVolume > 0 && bgm.paused) {
+                bgm.play().catch((e) => {
+                    // Ignore autoplay errors if user hasn't interacted enough
+                });
+            } else if (bgmVolume === 0 && !bgm.paused) {
+                bgm.pause();
+            }
+        }
+
+        let sfxVolume = 1.0;
+        let audioCtx = null;
+        function changeSFXVolume(val) {
+            sfxVolume = val / 100;
+            document.getElementById('sfx-vol-val').innerText = val;
+        }
+
+        function playSound(type) {
+            if (sfxVolume <= 0) return;
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                let baseVol = sfxVolume * 0.1; // 스케일 조정
+                
+                if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime); // E5
+                    osc.frequency.setValueAtTime(880.00, audioCtx.currentTime + 0.1); // A5
+                    gain.gain.setValueAtTime(baseVol, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                } else {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(100, audioCtx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(baseVol, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                }
+            } catch (e) {}
+        }
+
+
+
+        function showSettings() {
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('settings-area').style.display = 'flex';
+            document.getElementById('global-settings-btn').style.display = 'none';
+        }
+
+        function hideSettings() {
+            document.getElementById('settings-area').style.display = 'none';
+            document.getElementById('main-menu').style.display = 'flex';
+            document.getElementById('global-settings-btn').style.display = 'block';
+        }
+
+        // ---- 도감(Dictionary) Logic ----
+        let currentDictType = '속담'; // 기본값
+
+        function initDictData() {
+            const proverbCount = DB.filter(item => item.type === "속담").length;
+            const idiomCount = DB.filter(item => item.type === "관용어").length;
+            document.getElementById('count-proverb').innerText = proverbCount;
+            document.getElementById('count-idiom').innerText = idiomCount;
+        }
+
+        function showDict() {
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('global-settings-btn').style.display = 'none';
+            document.getElementById('dict-area').style.display = 'flex';
+            initDictData();
+            switchTab('속담'); // 열 때 항상 속담 탭으로 초기화
+        }
+
+        function hideDict() {
+            document.getElementById('dict-area').style.display = 'none';
+            document.getElementById('main-menu').style.display = 'flex';
+            document.getElementById('global-settings-btn').style.display = 'block';
+        }
+
+        function switchTab(type) {
+            currentDictType = type;
+            document.getElementById('dict-main-title').innerText = `${type} 사전`;
+            
+            // 탭 스타일 변경
+            document.getElementById('tab-proverb').className = type === '속담' ? 'dict-tab active' : 'dict-tab';
+            document.getElementById('tab-idiom').className = type === '관용어' ? 'dict-tab active' : 'dict-tab';
+            
+            // 검색어 초기화
+            document.getElementById('dict-search-input').value = '';
+            
+            renderDictList();
+        }
+
+        function renderDictList() {
+            const listContainer = document.getElementById('dict-list');
+            const searchKeyword = document.getElementById('dict-search-input').value.trim().toLowerCase();
+            
+            let filtered = DB.filter(item => item.type === currentDictType);
+            
+            if (searchKeyword) {
+                filtered = filtered.filter(item => 
+                    item.idiom.toLowerCase().includes(searchKeyword) || 
+                    (item.meaning && item.meaning.toLowerCase().includes(searchKeyword)) ||
+                    (item.실상 && item.실상.toLowerCase().includes(searchKeyword))
+                );
+            }
+
+            let html = '';
+            if (filtered.length === 0) {
+                html = '<div style="padding: 2rem; text-align: center; color: var(--text-dim);">검색 결과가 없습니다.</div>';
+            } else {
+                filtered.forEach((item, index) => {
+                    const exactMeaning = item.meaning || item.실상;
+                    html += `
+                        <div class="dict-row">
+                            <div class="dict-col-index">${index + 1}</div>
+                            <div class="dict-col-word">${item.idiom}</div>
+                            <div class="dict-divider"></div>
+                            <div class="dict-col-meaning">${exactMeaning}</div>
+                        </div>
+                    `;
+                });
+            }
+            
+            listContainer.innerHTML = html;
+        }
+
+        // ---- Quiz Game Logic ----
+        let currentMode = 1;
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        
+        // 추가된 상태 변수들
+        let playerNickname = "플레이어";
+        let timeLimit = 0;
+        let totalRounds = 5;
+        let timerInterval = null;
+        let timeRemaining = 0;
+        let setupMode = 1;
+
+        function shuffle(array) {
+            let currentIndex = array.length,  randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function goHome() {
+            stopTimer();
+            document.getElementById('result-area').style.display = 'none';
+            document.getElementById('game-area').style.display = 'none';
+            document.getElementById('setup-area').style.display = 'none';
+            document.getElementById('main-menu').style.display = 'flex';
+            document.getElementById('global-settings-btn').style.display = 'block';
+        }
+
+        function openSetup(mode) {
+            setupMode = mode;
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('global-settings-btn').style.display = 'none';
+            document.getElementById('setup-area').style.display = 'flex';
+        }
+
+        function hideSetup() {
+            goHome();
+        }
+
+        function executeGameStart() {
+            const nickInput = document.getElementById('setup-nickname').value.trim();
+            playerNickname = nickInput ? nickInput : "플레이어";
+            timeLimit = parseInt(document.getElementById('setup-time').value);
+            const roundInput = document.getElementById('setup-rounds').value;
+            totalRounds = roundInput === 'all' ? DB.length : parseInt(roundInput);
+
+            document.getElementById('setup-area').style.display = 'none';
+            startGame(setupMode);
+        }
+
+        function startGame(mode) {
+            currentMode = mode;
+            score = 0;
+            currentIndex = 0;
+            
+            let maxAvailable = Math.min(totalRounds, DB.length);
+            currentQuestions = shuffle([...DB]).slice(0, maxAvailable);
+            totalRounds = currentQuestions.length; // 실제 문제 수로 업데이트
+            
+            document.getElementById('game-area').style.display = 'flex';
+            document.getElementById('game-area').style.flexDirection = 'column';
+            
+            loadQuestion();
+        }
+
+        function startTimer() {
+            stopTimer(); // 기존 타이머 클리어
+            if (timeLimit > 0) {
+                timeRemaining = timeLimit;
+                const timerDisplay = document.getElementById('timer-display');
+                const timeLeftSpan = document.getElementById('time-left');
+                
+                timerDisplay.style.display = 'inline';
+                timeLeftSpan.innerText = timeRemaining;
+                
+                timerInterval = setInterval(() => {
+                    timeRemaining--;
+                    timeLeftSpan.innerText = timeRemaining;
+                    if (timeRemaining <= 0) {
+                        stopTimer();
+                        showFeedback(false, true); // 시간 초과로 오답 처리
+                    }
+                }, 1000);
+            } else {
+                document.getElementById('timer-display').style.display = 'none';
+            }
+        }
+
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function loadQuestion() {
+            document.getElementById('feedback-text').innerText = '';
+            document.getElementById('info-text').innerText = '';
+            document.getElementById('next-btn').style.display = 'none';
+            document.getElementById('score-display').innerText = `점수: ${Math.round(score)}`;
+            document.getElementById('progress-display').innerText = `${currentIndex + 1} / ${currentQuestions.length}`;
+            
+            const q = currentQuestions[currentIndex];
+            const qText = document.getElementById('question-text');
+            const inputSec = document.getElementById('input-section');
+            const optionsSec = document.getElementById('options-section');
+            const inputField = document.getElementById('answer-input');
+
+            inputSec.style.display = 'none';
+            optionsSec.style.display = 'none';
+            inputField.value = '';
+
+            let label = q.type === "속담" ? "속담" : "관용표현";
+            let exactMeaning = q.meaning || q.실상;
+
+            if (currentMode === 1) {
+                qText.innerText = `뜻: ${exactMeaning}\n\n이 뜻을 가진 ${label}은(는)?`;
+                inputSec.style.display = 'block';
+                inputField.focus();
+            } else if (currentMode === 2) {
+                qText.innerText = `${label}: "${q.idiom}"\n\n이 ${label}의 올바른 뜻은?`;
+                optionsSec.style.display = 'block';
+                optionsSec.innerHTML = '';
+                
+                let options = [exactMeaning];
+                let others = shuffle([...DB].filter(item => item.idiom !== q.idiom)).slice(0, 3);
+                others.forEach(o => options.push(o.meaning || o.실상));
+                options = shuffle(options);
+                
+                options.forEach(opt => {
+                    let btn = document.createElement('button');
+                    btn.className = 'option-btn';
+                    btn.innerText = opt;
+                    btn.onclick = () => checkOption(opt, exactMeaning);
+                    optionsSec.appendChild(btn);
+                });
+            } else if (currentMode === 3) {
+                qText.innerText = `초성: ${q.chosung}\n뜻: ${exactMeaning}\n\n이 ${label}은(는)?`;
+                inputSec.style.display = 'block';
+                inputField.focus();
+            } else if (currentMode === 4) {
+                qText.innerText = `${label}: "${q.idiom}"\n\n이 ${label}의 뜻을 적어보세요.\n(핵심 단어가 포함되어야 합니다)`;
+                inputSec.style.display = 'block';
+                inputField.focus();
+            }
+            
+            startTimer();
+        }
+
+        function submitAnswer() {
+            const q = currentQuestions[currentIndex];
+            const input = document.getElementById('answer-input').value.trim();
+            if (!input) return;
+
+            let isCorrect = false;
+
+            if (currentMode === 1 || currentMode === 3) {
+                if (input.replace(/\s/g, '') === q.idiom.replace(/\s/g, '')) {
+                    isCorrect = true;
+                }
+            } else if (currentMode === 4) {
+                let matchCount = q.keywords.filter(kw => input.includes(kw)).length;
+                if (matchCount > 0) {
+                    isCorrect = true;
+                }
+            }
+
+            showFeedback(isCorrect);
+        }
+
+        function checkOption(selected, correct) {
+            showFeedback(selected === correct);
+        }
+
+        function showFeedback(isCorrect, isTimeOut = false) {
+            stopTimer(); // 피드백 표시 시 타이머 정지
+            const feedback = document.getElementById('feedback-text');
+            const info = document.getElementById('info-text');
+            const q = currentQuestions[currentIndex];
+            const exactMeaning = q.meaning || q.실상;
+            
+            if (isCorrect) {
+                score += (100 / totalRounds); // 총 문항 수에 비례한 점수
+                document.getElementById('score-display').innerText = `점수: ${Math.round(score)}`;
+                feedback.innerText = '정답입니다! 🎉';
+                feedback.className = 'feedback correct';
+                playSound('correct');
+            } else {
+                if (isTimeOut) {
+                    feedback.innerText = '시간 초과! ⏳';
+                } else {
+                    feedback.innerText = '틀렸습니다! 😢';
+                }
+                feedback.className = 'feedback incorrect';
+                playSound('incorrect');
+            }
+
+            if (currentMode === 1 || currentMode === 3) {
+                info.innerText = `정답: ${q.idiom}`;
+            } else if (currentMode === 4) {
+                info.innerText = `정확한 뜻: ${exactMeaning}`;
+            } else if (currentMode === 2 && !isCorrect) {
+                info.innerText = `정답: ${exactMeaning}`;
+            }
+
+            document.getElementById('input-section').style.display = 'none';
+            document.getElementById('options-section').style.display = 'none';
+            document.getElementById('next-btn').style.display = 'block';
+            document.getElementById('next-btn').focus();
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            if (currentIndex < currentQuestions.length) {
+                loadQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('game-area').style.display = 'none';
+            document.getElementById('result-area').style.display = 'flex';
+            document.getElementById('result-area').style.flexDirection = 'column';
+            document.getElementById('final-score').innerText = `${playerNickname}님의 최종 점수: ${Math.round(score)}점 / 100점`;
+        }
+    </script>
+</body>
+</html>
