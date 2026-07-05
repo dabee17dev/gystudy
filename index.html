@@ -556,7 +556,7 @@
 
             <!-- 로그인/가입 (로그아웃 상태) -->
             <div id="login-box" style="margin-bottom: 1.5rem;">
-                <input type="text" id="login-nickname" class="input-box" maxlength="12" placeholder="닉네임 (같은 닉네임이면 로그인)" style="margin: 0 0 0.5rem 0;" onkeypress="if(event.key==='Enter') login()">
+                <input type="text" id="login-nickname" class="input-box" maxlength="12" placeholder="이름 (같은 이름이면 로그인)" style="margin: 0 0 0.5rem 0;" onkeypress="if(event.key==='Enter') login()">
                 <button class="menu-btn" style="background: var(--highlight); color: #fff; border: none; font-weight: bold; margin: 0;" onclick="login()">로그인 / 가입</button>
                 <div id="login-msg" style="min-height: 1.2rem; margin-top: 0.5rem; font-size: 0.9rem;"></div>
             </div>
@@ -715,7 +715,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.8.0";
+        const APP_VERSION = "1.8.1";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -1147,7 +1147,7 @@
             const input = document.getElementById('login-nickname');
             const msg = document.getElementById('login-msg');
             const nick = input.value.trim().replace(/\s+/g, ' ').slice(0, 12);
-            if (!nick) { msg.style.color = '#dc2626'; msg.innerText = '닉네임을 입력하세요.'; return; }
+            if (!nick) { msg.style.color = '#dc2626'; msg.innerText = '이름을 입력하세요.'; return; }
 
             msg.style.color = 'var(--text-dim)';
             msg.innerText = '확인 중…';
@@ -1357,7 +1357,7 @@
         }
 
         function openSetup(mode) {
-            if (!currentPlayer) { alert('먼저 닉네임으로 로그인해 주세요.'); return; }
+            if (!currentPlayer) { alert('먼저 이름으로 로그인해 주세요.'); return; }
             setupMode = mode;
             document.getElementById('setup-player').innerText = `👤 ${currentPlayer}님`;
             document.getElementById('main-menu').style.display = 'none';
@@ -1370,7 +1370,7 @@
         }
 
         function executeGameStart() {
-            if (!currentPlayer) { alert('먼저 닉네임으로 로그인해 주세요.'); goHome(); return; }
+            if (!currentPlayer) { alert('먼저 이름으로 로그인해 주세요.'); goHome(); return; }
             playerNickname = currentPlayer;
             totalTime = parseInt(document.getElementById('setup-time').value);
             difficulty = document.getElementById('setup-difficulty').value;
