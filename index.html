@@ -179,6 +179,7 @@
             white-space: pre-wrap;
         }
         .feedback { margin-top: 1rem; font-size: 1.1rem; font-weight: bold; min-height: 1.5rem; }
+        .feedback-note { font-size: 0.8rem; font-weight: 500; color: var(--text-muted); margin-top: 3px; }
         .correct { color: #16a34a; }
         [data-theme="dark"] .correct { color: #4ade80; }
         .incorrect { color: #dc2626; }
@@ -907,7 +908,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.14.2";
+        const APP_VERSION = "1.14.3";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -1763,10 +1764,13 @@
             if (!input) return;
 
             let isCorrect = false;
+            let approx = false; // 유사도/별칭으로 인정된 근사 정답
 
             if (currentMode === 1 || currentMode === 3) {
                 if (isCorrectExpression(input, q)) {
                     isCorrect = true;
+                    // 정답 표현과 완전히 일치하지 않으면 근사 정답
+                    approx = input.replace(/\s/g, '') !== q.idiom.replace(/\s/g, '');
                 }
             } else if (currentMode === 4) {
                 let matchCount = q.keywords.filter(kw => input.includes(kw)).length;
@@ -1777,7 +1781,7 @@
                 }
             }
 
-            showFeedback(isCorrect);
+            showFeedback(isCorrect, approx);
         }
 
         function checkOption(selected, correct) {
@@ -1785,7 +1789,7 @@
             showFeedback(selected === correct);
         }
 
-        function showFeedback(isCorrect) {
+        function showFeedback(isCorrect, approx = false) {
             // 전체 타이머는 계속 흐름 (정지하지 않음)
             answered++;
             const feedback = document.getElementById('feedback-text');
@@ -1796,7 +1800,8 @@
             if (isCorrect) {
                 score += 1; // 맞힌 문제 수
                 document.getElementById('score-display').innerText = `맞힘: ${score}`;
-                feedback.innerText = '정답입니다! 🎉';
+                feedback.innerHTML = '정답입니다! 🎉' +
+                    (approx ? '<div class="feedback-note">(비슷한 의미 입력 정답 인정)</div>' : '');
                 feedback.className = 'feedback correct';
             } else {
                 feedback.innerText = '틀렸습니다! 😢';
