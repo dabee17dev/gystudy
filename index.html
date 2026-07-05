@@ -337,7 +337,8 @@
             width: 3rem;
             color: var(--text-dim);
             font-size: 0.9rem;
-            text-align: center;
+            text-align: right;
+            padding-right: 0.75rem;
             flex-shrink: 0;
         }
         .dict-col-word {
@@ -451,8 +452,9 @@
                 padding: 0.85rem 0.9rem;
             }
             .dict-col-index {
-                width: 1.6rem;
-                text-align: left;
+                width: 2.2rem;
+                text-align: right;
+                padding-right: 0.5rem;
                 font-size: 0.85rem;
             }
             .dict-col-word {
@@ -466,7 +468,7 @@
                 flex-basis: 100%;
                 width: 100%;
                 margin-top: 0.35rem;
-                padding-left: 1.6rem; /* 번호 폭만큼 들여써 표현과 정렬 */
+                padding-left: 2.2rem; /* 번호 폭만큼 들여써 표현과 정렬 */
                 font-size: 0.9rem;
             }
         }
@@ -614,7 +616,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.5.1";
+        const APP_VERSION = "1.5.2";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
