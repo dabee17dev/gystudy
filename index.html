@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>관용표현 & 속담 퀴즈</title>
+    <!-- Supabase 환경변수 주입 (Vite가 %VITE_*%를 .env.local 값으로 치환) -->
+    <script>
+        window.__SB__ = {
+            url: "%VITE_SUPABASE_URL%",
+            key: "%VITE_SUPABASE_ANON_KEY%"
+        };
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&family=Noto+Sans+KR:wght@300;500;700&family=Nanum+Myeongjo:wght@400;700;800&display=swap');
 
@@ -160,7 +167,7 @@
             color: var(--text-dim);
         }
 
-        #game-area, #result-area, #dict-area, #settings-area, #setup-area {
+        #game-area, #result-area, #dict-area, #settings-area, #setup-area, #ranking-area {
             display: none;
         }
 
@@ -397,6 +404,62 @@
             font-weight: 500;
         }
 
+        /* ---- 랭킹 / 리더보드 ---- */
+        .lb-filters {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .lb-filters select {
+            flex: 1;
+            padding: 0.6rem 0.5rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            cursor: pointer;
+            outline: none;
+        }
+        .leaderboard {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-dict-list);
+            overflow: hidden;
+        }
+        .lb-row {
+            display: flex;
+            align-items: center;
+            padding: 0.7rem 0.9rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.95rem;
+        }
+        .lb-row:last-child { border-bottom: none; }
+        .lb-row.me {
+            background: color-mix(in srgb, var(--highlight) 18%, transparent);
+        }
+        .lb-rank {
+            width: 2.4rem;
+            text-align: right;
+            padding-right: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+        .lb-rank.medal { color: var(--highlight); }
+        .lb-name {
+            flex: 1;
+            font-weight: 600;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-right: 0.5rem;
+        }
+        .lb-solved { font-weight: 700; color: var(--highlight); flex-shrink: 0; }
+        .lb-acc { width: 3.6rem; text-align: right; color: var(--text-dim); font-size: 0.85rem; flex-shrink: 0; }
+        .lb-empty { padding: 1.5rem; text-align: center; color: var(--text-dim); font-size: 0.9rem; }
+
         /* ---- 반응형 (모바일 / 작은 화면) ---- */
         @media (max-width: 600px) {
             html { font-size: 15px; }
@@ -491,12 +554,44 @@
             <h1>관용표현 & 속담 퀴즈</h1>
             <p style="margin-bottom: 2rem; color: var(--text-dim);">재미있게 배우는 우리말 관용표현과 속담!</p>
             
-            <button class="menu-btn" style="border-color: var(--highlight); margin-bottom: 2rem; color: var(--highlight);" onclick="showDict()">📚 관용표현 사전</button>
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 2rem;">
+                <button class="menu-btn" style="border-color: var(--highlight); color: var(--highlight); margin: 0;" onclick="showDict()">📚 사전</button>
+                <button class="menu-btn" style="border-color: var(--highlight); color: var(--highlight); margin: 0;" onclick="showRanking()">🏆 랭킹</button>
+            </div>
 
             <button class="menu-btn" onclick="openSetup(1)">1. 뜻 보고 맞추기 (주관식)</button>
             <button class="menu-btn" onclick="openSetup(2)">2. 단어 보고 뜻 맞추기 (객관식)</button>
             <button class="menu-btn" onclick="openSetup(3)">3. 초성 퀴즈 (주관식)</button>
             <button class="menu-btn" onclick="openSetup(4)">4. 뜻 적기 퀴즈 (키워드 주관식)</button>
+        </div>
+
+        <!-- Ranking Area -->
+        <div class="container" id="ranking-area" style="height: 55rem; max-height: 90vh; padding: 2.5rem; justify-content: flex-start;">
+            <button class="close-btn" onclick="hideRanking()">✕</button>
+            <h2 style="font-size: 2rem; margin-bottom: 0.3rem;">🏆 랭킹</h2>
+            <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1.2rem;">같은 조건(모드·난이도·시간)끼리 맞힌 개수로 겨룹니다.</p>
+            <div class="lb-filters">
+                <select id="rank-mode" onchange="loadRanking()">
+                    <option value="1">뜻→표현</option>
+                    <option value="2">표현→뜻(객관식)</option>
+                    <option value="3">초성 퀴즈</option>
+                    <option value="4">뜻 적기</option>
+                </select>
+                <select id="rank-difficulty" onchange="loadRanking()">
+                    <option value="easy">쉬움</option>
+                    <option value="hard">하드</option>
+                </select>
+                <select id="rank-time" onchange="loadRanking()">
+                    <option value="60">1분</option>
+                    <option value="120">2분</option>
+                    <option value="180">3분</option>
+                    <option value="300">5분</option>
+                </select>
+            </div>
+            <div id="ranking-list" class="leaderboard" style="flex: 1; overflow-y: auto;">
+                <div class="lb-empty">불러오는 중…</div>
+            </div>
+            <button class="menu-btn" style="margin-top: 1rem;" onclick="hideRanking()">닫기</button>
         </div>
 
         <!-- Settings Area -->
@@ -596,17 +691,19 @@
         </div>
 
         <!-- Result Area -->
-        <div class="container" id="result-area">
-            <h1>게임 종료!</h1>
-            <p id="final-score" style="font-size: 1.5rem; margin-bottom: 2rem; white-space: pre-line; line-height: 1.5;"></p>
-            <button class="action-btn" onclick="goHome()">메인으로 돌아가기</button>
+        <div class="container" id="result-area" style="justify-content: flex-start; padding-top: 3rem;">
+            <h1 style="margin-bottom: 0.5rem;">게임 종료!</h1>
+            <p id="final-score" style="font-size: 1.3rem; margin-bottom: 1rem; white-space: pre-line; line-height: 1.5;"></p>
+            <div id="result-rank-status" style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 0.6rem;"></div>
+            <div id="result-leaderboard" class="leaderboard" style="width: 100%; margin-bottom: 1.5rem; max-height: 22rem; overflow-y: auto;"></div>
+            <button class="action-btn" style="margin-top: auto;" onclick="goHome()">메인으로 돌아가기</button>
         </div>
     </div>
 
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.6.0";
+        const APP_VERSION = "1.7.0";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -933,8 +1030,80 @@
             { type: "관용어", idiom: "환장을 하다", meaning: "어떤 것에 정신없이 빠지다", chosung: "ㅎㅈㅇ ㅎㄷ", keywords: ["정신없이", "빠지"] },
         ];
 
+        // ---- Supabase 랭킹 (REST/PostgREST 직접 호출) ----
+        const SB_URL = (window.__SB__ && window.__SB__.url && window.__SB__.url.startsWith('http')) ? window.__SB__.url : '';
+        const SB_KEY = (window.__SB__ && window.__SB__.key && !window.__SB__.key.includes('%VITE')) ? window.__SB__.key : '';
+        const SB_ENABLED = !!(SB_URL && SB_KEY);
+        const SB_HEADERS = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json' };
+
+        // 게임 결과 1건 저장 → 성공 시 삽입된 행 반환
+        async function sbInsertScore(rec) {
+            if (!SB_ENABLED) return null;
+            try {
+                const res = await fetch(`${SB_URL}/rest/v1/scores`, {
+                    method: 'POST',
+                    headers: { ...SB_HEADERS, 'Prefer': 'return=representation' },
+                    body: JSON.stringify(rec)
+                });
+                if (!res.ok) throw new Error(`insert ${res.status}: ${await res.text()}`);
+                const rows = await res.json();
+                return rows[0] || null;
+            } catch (e) { console.warn('[랭킹] 저장 실패:', e.message); return null; }
+        }
+
+        // 조건별 리더보드 조회 (맞힌 개수 desc → 정확도 desc → 먼저 달성 우선)
+        async function sbFetchLeaderboard(mode, difficulty, timeLimit, limit = 30) {
+            if (!SB_ENABLED) return null;
+            try {
+                const q = `mode=eq.${mode}&difficulty=eq.${difficulty}&time_limit=eq.${timeLimit}` +
+                          `&select=id,nickname,solved,accuracy,created_at` +
+                          `&order=solved.desc,accuracy.desc,created_at.asc&limit=${limit}`;
+                const res = await fetch(`${SB_URL}/rest/v1/scores?${q}`, { headers: SB_HEADERS });
+                if (!res.ok) throw new Error(`select ${res.status}: ${await res.text()}`);
+                return await res.json();
+            } catch (e) { console.warn('[랭킹] 조회 실패:', e.message); return null; }
+        }
+
+        // 리더보드 렌더 (rows 없으면 안내). highlightId와 일치하는 행 강조
+        function renderLeaderboard(container, rows, highlightId) {
+            if (!SB_ENABLED) {
+                container.innerHTML = '<div class="lb-empty">랭킹 서버가 설정되지 않았습니다.<br>(.env.local 확인)</div>';
+                return;
+            }
+            if (rows === null) {
+                container.innerHTML = '<div class="lb-empty">랭킹을 불러오지 못했습니다.<br>네트워크나 테이블 설정을 확인하세요.</div>';
+                return;
+            }
+            if (rows.length === 0) {
+                container.innerHTML = '<div class="lb-empty">아직 기록이 없어요. 첫 기록의 주인공이 되어보세요! 🎉</div>';
+                return;
+            }
+            container.innerHTML = rows.map((r, i) => {
+                const rank = i + 1;
+                const medal = rank <= 3 ? ' medal' : '';
+                const mark = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+                const me = (highlightId != null && r.id === highlightId) ? ' me' : '';
+                const acc = (r.accuracy != null) ? Math.round(r.accuracy * 100) + '%' : '-';
+                const nick = escapeHtml(r.nickname);
+                return `<div class="lb-row${me}">
+                    <div class="lb-rank${medal}">${mark}</div>
+                    <div class="lb-name">${nick}</div>
+                    <div class="lb-solved">${r.solved}개</div>
+                    <div class="lb-acc">${acc}</div>
+                </div>`;
+            }).join('');
+        }
+
+        // 닉네임 등 사용자 입력이 innerHTML에 들어갈 때 XSS 방지용 이스케이프
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"']/g, c => (
+                { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+            ));
+        }
+
         // ---- Settings 저장/복원 (localStorage) ----
         const SETTINGS_KEY = 'gystudy-settings';
+        const NICK_KEY = 'gystudy-nickname';
 
         function saveSettings() {
             try {
@@ -1090,12 +1259,16 @@
             document.getElementById('result-area').style.display = 'none';
             document.getElementById('game-area').style.display = 'none';
             document.getElementById('setup-area').style.display = 'none';
+            document.getElementById('ranking-area').style.display = 'none';
             document.getElementById('main-menu').style.display = 'flex';
             document.getElementById('global-settings-btn').style.display = 'block';
         }
 
         function openSetup(mode) {
             setupMode = mode;
+            // 저장된 닉네임 미리 채우기
+            const savedNick = localStorage.getItem(NICK_KEY);
+            if (savedNick) document.getElementById('setup-nickname').value = savedNick;
             document.getElementById('main-menu').style.display = 'none';
             document.getElementById('global-settings-btn').style.display = 'none';
             document.getElementById('setup-area').style.display = 'flex';
@@ -1106,8 +1279,9 @@
         }
 
         function executeGameStart() {
-            const nickInput = document.getElementById('setup-nickname').value.trim();
+            const nickInput = document.getElementById('setup-nickname').value.trim().slice(0, 12);
             playerNickname = nickInput ? nickInput : "플레이어";
+            try { localStorage.setItem(NICK_KEY, playerNickname); } catch (e) {}
             totalTime = parseInt(document.getElementById('setup-time').value);
             difficulty = document.getElementById('setup-difficulty').value;
 
@@ -1295,12 +1469,72 @@
             showResult();
         }
 
-        function showResult() {
+        async function showResult() {
             document.getElementById('game-area').style.display = 'none';
             document.getElementById('result-area').style.display = 'flex';
             document.getElementById('result-area').style.flexDirection = 'column';
             document.getElementById('final-score').innerText =
                 `${playerNickname}님이 ${formatTime(totalTime)} 동안\n맞힌 문제: ${score}개  (시도 ${answered}개)`;
+
+            const status = document.getElementById('result-rank-status');
+            const board = document.getElementById('result-leaderboard');
+            // 이번 판 조건 (랭킹 비교 단위)
+            const cond = { mode: currentMode, difficulty: difficulty, time_limit: totalTime };
+
+            if (!SB_ENABLED) {
+                status.innerText = '';
+                board.innerHTML = '<div class="lb-empty">랭킹 서버 미설정 (.env.local 확인)</div>';
+                return;
+            }
+
+            status.innerText = '기록 저장 중…';
+            board.innerHTML = '<div class="lb-empty">불러오는 중…</div>';
+
+            const accuracy = answered > 0 ? Math.round((score / answered) * 1000) / 1000 : 0;
+            const saved = await sbInsertScore({
+                nickname: playerNickname, ...cond,
+                solved: score, attempted: answered, accuracy
+            });
+
+            const rows = await sbFetchLeaderboard(cond.mode, cond.difficulty, cond.time_limit);
+            const myId = saved ? saved.id : null;
+            renderLeaderboard(board, rows, myId);
+
+            if (rows && myId != null) {
+                const rank = rows.findIndex(r => r.id === myId);
+                status.innerText = rank >= 0
+                    ? `내 순위: ${rank + 1}위 / ${rows.length}명 (상위 30 기준)`
+                    : `기록 저장됨 · 상위 30위권 밖`;
+            } else if (!saved) {
+                status.innerText = '⚠️ 기록 저장 실패 (아래 목록만 표시)';
+            } else {
+                status.innerText = '';
+            }
+        }
+
+        // ---- 랭킹 패널 ----
+        function showRanking() {
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('global-settings-btn').style.display = 'none';
+            document.getElementById('ranking-area').style.display = 'flex';
+            document.getElementById('ranking-area').style.flexDirection = 'column';
+            loadRanking();
+        }
+
+        function hideRanking() {
+            document.getElementById('ranking-area').style.display = 'none';
+            document.getElementById('main-menu').style.display = 'flex';
+            document.getElementById('global-settings-btn').style.display = 'block';
+        }
+
+        async function loadRanking() {
+            const list = document.getElementById('ranking-list');
+            const mode = parseInt(document.getElementById('rank-mode').value);
+            const diff = document.getElementById('rank-difficulty').value;
+            const time = parseInt(document.getElementById('rank-time').value);
+            list.innerHTML = '<div class="lb-empty">불러오는 중…</div>';
+            const rows = await sbFetchLeaderboard(mode, diff, time);
+            renderLeaderboard(list, rows, null);
         }
 
         // ---- 초기화 ----

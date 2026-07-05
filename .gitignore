@@ -13,3 +13,8 @@ Thumbs.db
 
 # Build output
 dist/
+
+# Env (secrets / local config)
+.env
+.env.local
+.env.*.local

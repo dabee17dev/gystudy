@@ -1,0 +1,44 @@
+-- gystudy 랭킹 스키마
+-- Supabase 대시보드 → SQL Editor 에 붙여넣고 실행하세요.
+-- (anon 키로는 테이블 생성이 불가하므로 대시보드에서 1회 실행이 필요합니다.)
+
+-- 1) 점수(게임 결과) 테이블
+create table if not exists public.scores (
+    id          bigint generated always as identity primary key,
+    nickname    text        not null,
+    mode        int         not null,            -- 1~4 퀴즈 모드
+    difficulty  text        not null,            -- 'easy' | 'hard'
+    time_limit  int         not null,            -- 60/120/180/300 (초)
+    solved      int         not null,            -- 맞힌 개수 (랭킹 기준)
+    attempted   int         not null,            -- 시도 개수
+    accuracy    real,                            -- solved/attempted (0~1)
+    created_at  timestamptz not null default now(),
+    constraint scores_solved_chk    check (solved >= 0 and attempted >= solved),
+    constraint scores_difficulty_chk check (difficulty in ('easy','hard')),
+    constraint scores_time_chk      check (time_limit in (60,120,180,300)),
+    constraint scores_nick_chk      check (char_length(nickname) between 1 and 12)
+);
+
+-- 2) 리더보드 조회 최적화 인덱스 (같은 조건끼리 비교)
+create index if not exists idx_scores_leaderboard
+    on public.scores (mode, difficulty, time_limit, solved desc, accuracy desc, created_at asc);
+
+-- 3) RLS: 누구나 읽기/쓰기(삽입) 가능
+alter table public.scores enable row level security;
+
+drop policy if exists "public read scores"   on public.scores;
+drop policy if exists "public insert scores" on public.scores;
+
+create policy "public read scores"
+    on public.scores for select
+    using (true);
+
+create policy "public insert scores"
+    on public.scores for insert
+    with check (true);
+
+-- 참고: 수정/삭제(update/delete) 정책은 일부러 열지 않았습니다.
+--       (누구나 남의 기록을 지우거나 조작하는 것을 막기 위함)
+--       필요하면 아래 주석을 해제하세요. (권장하지 않음)
+-- create policy "public update scores" on public.scores for update using (true) with check (true);
+-- create policy "public delete scores" on public.scores for delete using (true);
