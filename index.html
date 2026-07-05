@@ -552,17 +552,33 @@
         <!-- Main Menu -->
         <div class="container" id="main-menu">
             <h1>관용표현 & 속담 퀴즈</h1>
-            <p style="margin-bottom: 2rem; color: var(--text-dim);">재미있게 배우는 우리말 관용표현과 속담!</p>
-            
-            <div style="display: flex; gap: 0.5rem; margin-bottom: 2rem;">
+            <p style="margin-bottom: 1.5rem; color: var(--text-dim);">재미있게 배우는 우리말 관용표현과 속담!</p>
+
+            <!-- 로그인/가입 (로그아웃 상태) -->
+            <div id="login-box" style="margin-bottom: 1.5rem;">
+                <input type="text" id="login-nickname" class="input-box" maxlength="12" placeholder="닉네임 (같은 닉네임이면 로그인)" style="margin: 0 0 0.5rem 0;" onkeypress="if(event.key==='Enter') login()">
+                <button class="menu-btn" style="background: var(--highlight); color: #fff; border: none; font-weight: bold; margin: 0;" onclick="login()">로그인 / 가입</button>
+                <div id="login-msg" style="min-height: 1.2rem; margin-top: 0.5rem; font-size: 0.9rem;"></div>
+            </div>
+
+            <!-- 플레이어 정보 (로그인 상태) -->
+            <div id="player-box" style="display: none; align-items: center; justify-content: center; gap: 0.75rem; margin-bottom: 1.5rem; font-size: 1.1rem;">
+                <span>👤 <b id="player-name"></b>님</span>
+                <button class="action-btn" style="width: auto; padding: 0.4rem 1rem; margin: 0; font-size: 0.9rem;" onclick="logout()">로그아웃</button>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
                 <button class="menu-btn" style="border-color: var(--highlight); color: var(--highlight); margin: 0;" onclick="showDict()">📚 사전</button>
                 <button class="menu-btn" style="border-color: var(--highlight); color: var(--highlight); margin: 0;" onclick="showRanking()">🏆 랭킹</button>
             </div>
 
-            <button class="menu-btn" onclick="openSetup(1)">1. 뜻 보고 맞추기 (주관식)</button>
-            <button class="menu-btn" onclick="openSetup(2)">2. 단어 보고 뜻 맞추기 (객관식)</button>
-            <button class="menu-btn" onclick="openSetup(3)">3. 초성 퀴즈 (주관식)</button>
-            <button class="menu-btn" onclick="openSetup(4)">4. 뜻 적기 퀴즈 (키워드 주관식)</button>
+            <!-- 게임 메뉴 (로그인 시에만 노출) -->
+            <div id="game-menu" style="display: none;">
+                <button class="menu-btn" onclick="openSetup(1)">1. 뜻 보고 맞추기 (주관식)</button>
+                <button class="menu-btn" onclick="openSetup(2)">2. 단어 보고 뜻 맞추기 (객관식)</button>
+                <button class="menu-btn" onclick="openSetup(3)">3. 초성 퀴즈 (주관식)</button>
+                <button class="menu-btn" onclick="openSetup(4)">4. 뜻 적기 퀴즈 (키워드 주관식)</button>
+            </div>
         </div>
 
         <!-- Ranking Area -->
@@ -637,12 +653,8 @@
         <!-- Setup Area -->
         <div class="container" id="setup-area">
             <button class="close-btn" onclick="hideSetup()">✕</button>
-            <h2 style="font-size: 2rem; margin-bottom: 1rem;">🕹️ 게임 세부 설정</h2>
-            
-            <div style="text-align: left; margin-bottom: 1.5rem;">
-                <label style="font-weight: bold; display: block; margin-bottom: 0.5rem;">👤 플레이어 닉네임</label>
-                <input type="text" id="setup-nickname" class="input-box" placeholder="이름을 입력하세요 (미입력 시 '플레이어')" style="margin: 0;">
-            </div>
+            <h2 style="font-size: 2rem; margin-bottom: 0.3rem;">🕹️ 게임 세부 설정</h2>
+            <p id="setup-player" style="color: var(--text-dim); margin-bottom: 1.5rem;"></p>
 
             <div style="text-align: left; margin-bottom: 1.5rem;">
                 <label style="font-weight: bold; display: block; margin-bottom: 0.5rem;">⏱️ 제한시간 (전체) <span style="font-weight: normal; color: var(--text-dim);">시간 내 최대한 많이!</span></label>
@@ -703,7 +715,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.7.0";
+        const APP_VERSION = "1.8.0";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -1101,9 +1113,89 @@
             ));
         }
 
+        // 닉네임으로 플레이어 조회 (있으면 행, 없으면 null)
+        async function sbFindPlayer(nick) {
+            if (!SB_ENABLED) return null;
+            try {
+                const res = await fetch(`${SB_URL}/rest/v1/players?nickname=eq.${encodeURIComponent(nick)}&select=nickname&limit=1`, { headers: SB_HEADERS });
+                if (!res.ok) throw new Error(`find ${res.status}`);
+                const rows = await res.json();
+                return rows[0] || null;
+            } catch (e) { console.warn('[플레이어] 조회 실패:', e.message); return undefined; } // undefined = 확인 불가
+        }
+
+        // 플레이어 신규 등록 (성공 true, 중복이면 409)
+        async function sbRegisterPlayer(nick) {
+            if (!SB_ENABLED) return false;
+            try {
+                const res = await fetch(`${SB_URL}/rest/v1/players`, {
+                    method: 'POST',
+                    headers: { ...SB_HEADERS, 'Prefer': 'return=minimal' },
+                    body: JSON.stringify({ nickname: nick })
+                });
+                if (res.status === 409) return 'exists';
+                if (!res.ok) throw new Error(`register ${res.status}`);
+                return true;
+            } catch (e) { console.warn('[플레이어] 등록 실패:', e.message); return false; }
+        }
+
+        // ---- 로그인 / 가입 (비밀번호 없음, 같은 닉네임이면 로그인) ----
+        const PLAYER_KEY = 'gystudy-player';
+        let currentPlayer = null;
+
+        async function login() {
+            const input = document.getElementById('login-nickname');
+            const msg = document.getElementById('login-msg');
+            const nick = input.value.trim().replace(/\s+/g, ' ').slice(0, 12);
+            if (!nick) { msg.style.color = '#dc2626'; msg.innerText = '닉네임을 입력하세요.'; return; }
+
+            msg.style.color = 'var(--text-dim)';
+            msg.innerText = '확인 중…';
+
+            let kind = 'local'; // 'login' | 'signup' | 'local'
+            if (SB_ENABLED) {
+                const found = await sbFindPlayer(nick);
+                if (found) {
+                    kind = 'login';
+                } else if (found === null) {
+                    const reg = await sbRegisterPlayer(nick);
+                    kind = (reg === 'exists') ? 'login' : (reg === true ? 'signup' : 'local');
+                } else {
+                    kind = 'local'; // 서버 확인 불가 → 로컬로만 진행
+                }
+            }
+
+            setCurrentPlayer(nick);
+            msg.style.color = '#16a34a';
+            msg.innerText = kind === 'signup' ? `가입 완료! 환영합니다, ${nick}님 🎉`
+                          : kind === 'login'  ? `${nick}님 로그인 완료 👋`
+                          : `${nick}님으로 시작합니다.`;
+        }
+
+        function setCurrentPlayer(nick) {
+            currentPlayer = nick;
+            try { localStorage.setItem(PLAYER_KEY, nick); } catch (e) {}
+            updatePlayerUI();
+        }
+
+        function logout() {
+            currentPlayer = null;
+            try { localStorage.removeItem(PLAYER_KEY); } catch (e) {}
+            document.getElementById('login-nickname').value = '';
+            document.getElementById('login-msg').innerText = '';
+            updatePlayerUI();
+        }
+
+        function updatePlayerUI() {
+            const loggedIn = !!currentPlayer;
+            document.getElementById('login-box').style.display = loggedIn ? 'none' : 'block';
+            document.getElementById('player-box').style.display = loggedIn ? 'flex' : 'none';
+            document.getElementById('game-menu').style.display = loggedIn ? 'block' : 'none';
+            if (loggedIn) document.getElementById('player-name').innerText = currentPlayer;
+        }
+
         // ---- Settings 저장/복원 (localStorage) ----
         const SETTINGS_KEY = 'gystudy-settings';
-        const NICK_KEY = 'gystudy-nickname';
 
         function saveSettings() {
             try {
@@ -1265,10 +1357,9 @@
         }
 
         function openSetup(mode) {
+            if (!currentPlayer) { alert('먼저 닉네임으로 로그인해 주세요.'); return; }
             setupMode = mode;
-            // 저장된 닉네임 미리 채우기
-            const savedNick = localStorage.getItem(NICK_KEY);
-            if (savedNick) document.getElementById('setup-nickname').value = savedNick;
+            document.getElementById('setup-player').innerText = `👤 ${currentPlayer}님`;
             document.getElementById('main-menu').style.display = 'none';
             document.getElementById('global-settings-btn').style.display = 'none';
             document.getElementById('setup-area').style.display = 'flex';
@@ -1279,9 +1370,8 @@
         }
 
         function executeGameStart() {
-            const nickInput = document.getElementById('setup-nickname').value.trim().slice(0, 12);
-            playerNickname = nickInput ? nickInput : "플레이어";
-            try { localStorage.setItem(NICK_KEY, playerNickname); } catch (e) {}
+            if (!currentPlayer) { alert('먼저 닉네임으로 로그인해 주세요.'); goHome(); return; }
+            playerNickname = currentPlayer;
             totalTime = parseInt(document.getElementById('setup-time').value);
             difficulty = document.getElementById('setup-difficulty').value;
 
@@ -1540,6 +1630,9 @@
         // ---- 초기화 ----
         document.getElementById('app-version').innerText = `v${APP_VERSION}`;
         loadSettings();
+        // 로그인 상태 복원
+        currentPlayer = localStorage.getItem(PLAYER_KEY) || null;
+        updatePlayerUI();
     </script>
 </body>
 </html>

@@ -2,6 +2,20 @@
 -- Supabase 대시보드 → SQL Editor 에 붙여넣고 실행하세요.
 -- (anon 키로는 테이블 생성이 불가하므로 대시보드에서 1회 실행이 필요합니다.)
 
+-- 0) 플레이어(닉네임) 테이블 — 비밀번호 없는 가입/로그인용
+create table if not exists public.players (
+    id          bigint generated always as identity primary key,
+    nickname    text        not null unique,
+    created_at  timestamptz not null default now(),
+    constraint players_nick_chk check (char_length(nickname) between 1 and 12)
+);
+
+alter table public.players enable row level security;
+drop policy if exists "public read players"   on public.players;
+drop policy if exists "public insert players" on public.players;
+create policy "public read players"   on public.players for select using (true);
+create policy "public insert players" on public.players for insert with check (true);
+
 -- 1) 점수(게임 결과) 테이블
 create table if not exists public.scores (
     id          bigint generated always as identity primary key,
