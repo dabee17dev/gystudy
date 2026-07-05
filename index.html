@@ -617,13 +617,9 @@
             <button class="close-btn" onclick="hideRanking()">✕</button>
             <h2 style="font-size: 2rem; margin-bottom: 0.3rem;">🏆 랭킹</h2>
             <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1.2rem;">모드 상관없이 맞힌 개수로 겨룹니다. <b>어려움</b>이 위, <b>쉬움</b>이 아래.</p>
-            <div class="lb-filters">
-                <select id="rank-time" onchange="loadRanking()">
-                    <option value="60">1분</option>
-                    <option value="120">2분</option>
-                    <option value="180">3분</option>
-                    <option value="300">5분</option>
-                </select>
+            <div class="dict-tabs" style="margin-bottom: 1rem;">
+                <div class="dict-tab active" id="rtab-60" onclick="selectRankTime(60)">1분</div>
+                <div class="dict-tab" id="rtab-120" onclick="selectRankTime(120)">2분</div>
             </div>
             <div id="ranking-list" class="leaderboard" style="flex: 1; overflow-y: auto;">
                 <div class="lb-empty">불러오는 중…</div>
@@ -682,8 +678,6 @@
                 <select id="setup-time" class="input-box" style="margin: 0; cursor: pointer;">
                     <option value="60">1분</option>
                     <option value="120" selected>2분</option>
-                    <option value="180">3분</option>
-                    <option value="300">5분</option>
                 </select>
             </div>
 
@@ -736,7 +730,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.9.1";
+        const APP_VERSION = "1.10.0";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -1644,11 +1638,21 @@
         }
 
         // ---- 랭킹 패널 ----
+        let rankTime = 60; // 선택된 랭킹 시간대(초): 60 | 120
+
         function showRanking() {
             document.getElementById('main-menu').style.display = 'none';
             document.getElementById('global-settings-btn').style.display = 'none';
             document.getElementById('ranking-area').style.display = 'flex';
             document.getElementById('ranking-area').style.flexDirection = 'column';
+            selectRankTime(rankTime);
+        }
+
+        // 탭 카드로 시간대 선택 → 해당 랭킹 표시
+        function selectRankTime(t) {
+            rankTime = t;
+            document.getElementById('rtab-60').className = t === 60 ? 'dict-tab active' : 'dict-tab';
+            document.getElementById('rtab-120').className = t === 120 ? 'dict-tab active' : 'dict-tab';
             loadRanking();
         }
 
@@ -1660,9 +1664,8 @@
 
         async function loadRanking() {
             const list = document.getElementById('ranking-list');
-            const time = parseInt(document.getElementById('rank-time').value);
             list.innerHTML = '<div class="lb-empty">불러오는 중…</div>';
-            const data = await sbFetchCombined(time);
+            const data = await sbFetchCombined(rankTime);
             renderCombinedBoard(list, data, null);
         }
 
