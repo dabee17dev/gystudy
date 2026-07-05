@@ -180,6 +180,42 @@
         }
         .feedback { margin-top: 1rem; font-size: 1.1rem; font-weight: bold; min-height: 1.5rem; }
         .feedback-note { font-size: 0.8rem; font-weight: 500; color: var(--text-muted); margin-top: 3px; }
+
+        /* 단어 조각 배열 게임 */
+        .arrange-answer {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            justify-content: center;
+            align-items: center;
+            min-height: 3.2rem;
+            padding: 0.75rem;
+            border: 1px dashed var(--border-color);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+        .arrange-bank {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-bottom: 1rem;
+            min-height: 2.5rem;
+        }
+        .chip {
+            padding: 0.5rem 0.9rem;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-btn);
+            color: var(--text-main);
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .chip:hover { background: var(--bg-btn-hover); transform: translateY(-1px); }
+        .chip.placed { background: var(--highlight); color: #fff; border-color: var(--highlight); }
+        .arrange-ph { color: var(--text-dim); font-size: 0.9rem; }
         .correct { color: #16a34a; }
         [data-theme="dark"] .correct { color: #4ade80; }
         .incorrect { color: #dc2626; }
@@ -889,6 +925,13 @@
                 <!-- 객관식 버튼들이 동적으로 추가됨 -->
             </div>
 
+            <!-- 단어 조각 배열 (뜻 보고 표현 / 뜻 적기) -->
+            <div id="arrange-section" style="display: none;">
+                <div id="arrange-answer" class="arrange-answer"></div>
+                <div id="arrange-bank" class="arrange-bank"></div>
+                <button class="action-btn" onclick="submitArrange()">확인</button>
+            </div>
+
             <div id="feedback-text" class="feedback"></div>
             <div id="info-text" class="info"></div>
             
@@ -908,7 +951,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.14.3";
+        const APP_VERSION = "1.15.0";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -1686,15 +1729,15 @@
 
             inputSec.style.display = 'none';
             optionsSec.style.display = 'none';
+            document.getElementById('arrange-section').style.display = 'none';
             inputField.value = '';
 
             let label = q.type === "속담" ? "속담" : "관용표현";
             let exactMeaning = q.meaning;
 
             if (currentMode === 1) {
-                qText.innerText = `뜻: ${exactMeaning}\n\n이 뜻을 가진 ${label}은(는)?`;
-                inputSec.style.display = 'block';
-                inputField.focus();
+                qText.innerText = `뜻: ${exactMeaning}\n\n뜻에 맞는 ${label}을(를) 순서대로 배열하세요.`;
+                setupArrange(q.idiom);
             } else if (currentMode === 2) {
                 qText.innerText = `${label}: "${q.idiom}"\n\n이 ${label}의 올바른 뜻은?`;
                 optionsSec.style.display = 'block';
@@ -1717,10 +1760,58 @@
                 inputSec.style.display = 'block';
                 inputField.focus();
             } else if (currentMode === 4) {
-                qText.innerText = `${label}: "${q.idiom}"\n\n이 ${label}의 뜻을 적어보세요.\n(핵심 단어가 포함되어야 합니다)`;
-                inputSec.style.display = 'block';
-                inputField.focus();
+                qText.innerText = `${label}: "${q.idiom}"\n\n이 ${label}의 뜻을 순서대로 배열하세요.`;
+                setupArrange(exactMeaning);
             }
+        }
+
+        // ---- 단어 조각 배열 게임 (모드1: 표현, 모드4: 뜻) ----
+        let arrangeWords = [];   // 정답 순서의 단어 배열
+        let arrangeBank = [];    // 남은 조각 [{id, text}]
+        let arrangeAnswer = [];  // 배치된 조각 [{id, text}]
+
+        function setupArrange(target) {
+            arrangeWords = String(target).split(/\s+/).filter(Boolean);
+            const pieces = arrangeWords.map((w, i) => ({ id: i, text: w }));
+            // 원래 순서와 다르게 섞기 (조각 2개 이상일 때)
+            do { arrangeBank = shuffle([...pieces]); }
+            while (pieces.length > 1 && arrangeBank.map(p => p.text).join(' ') === arrangeWords.join(' '));
+            arrangeAnswer = [];
+            document.getElementById('arrange-section').style.display = 'block';
+            renderArrange();
+        }
+
+        function renderArrange() {
+            const bank = document.getElementById('arrange-bank');
+            const ans = document.getElementById('arrange-answer');
+            bank.innerHTML = arrangeBank.map(p =>
+                `<button class="chip" onclick="pickChip(${p.id})">${escapeHtml(p.text)}</button>`).join('');
+            ans.innerHTML = arrangeAnswer.length
+                ? arrangeAnswer.map(p => `<button class="chip placed" onclick="unpickChip(${p.id})">${escapeHtml(p.text)}</button>`).join('')
+                : '<span class="arrange-ph">조각을 순서대로 눌러 배열하세요</span>';
+        }
+
+        function pickChip(id) {
+            const i = arrangeBank.findIndex(p => p.id === id);
+            if (i < 0) return;
+            arrangeAnswer.push(arrangeBank[i]);
+            arrangeBank.splice(i, 1);
+            renderArrange();
+        }
+
+        function unpickChip(id) {
+            const i = arrangeAnswer.findIndex(p => p.id === id);
+            if (i < 0) return;
+            arrangeBank.push(arrangeAnswer[i]);
+            arrangeAnswer.splice(i, 1);
+            renderArrange();
+        }
+
+        function submitArrange() {
+            if (gameOver) return;
+            if (arrangeAnswer.length === 0) return;
+            const assembled = arrangeAnswer.map(p => p.text).join(' ');
+            showFeedback(assembled === arrangeWords.join(' '));
         }
 
         // 정답 유사도 판정: 약 80% 이상 비슷하면 통과 (조사/어미 차이·경미한 오타 허용)
@@ -1818,6 +1909,7 @@
 
             document.getElementById('input-section').style.display = 'none';
             document.getElementById('options-section').style.display = 'none';
+            document.getElementById('arrange-section').style.display = 'none';
             document.getElementById('next-btn').style.display = 'block';
             document.getElementById('next-btn').focus();
         }
