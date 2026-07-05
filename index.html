@@ -592,7 +592,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.4.0";
+        const APP_VERSION = "1.5.0";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -889,6 +889,34 @@
             { type: "속담", idiom: "우는 아이 젖 준다", meaning: "자기가 요구해야 원하는 것을 얻을 수 있다는 말", chosung: "ㅇㄴ ㅇㅇ ㅈ ㅈㄷ", keywords: ["요구해야", "얻"] },
             { type: "속담", idiom: "친구 따라 강남 간다", meaning: "자기 생각 없이 남에게 이끌려 덩달아 행동함을 이르는 말", chosung: "ㅊㄱ ㄸㄹ ㄱㄴ ㄱㄷ", keywords: ["남에게 이끌려", "덩달아"] },
             { type: "속담", idiom: "호미로 막을 것을 가래로 막는다", meaning: "적은 힘으로 될 일을 미루다가 큰 힘을 들이게 됨을 이르는 말", chosung: "ㅎㅁㄹ ㅁㅇ ㄱㅇ ㄱㄹㄹ ㅁㄴㄷ", keywords: ["적은 힘", "미루", "큰 힘"] },
+
+            // --- 관용표현 추가분 (중복 제외) ---
+            { type: "관용어", idiom: "기가 막히다", meaning: "어처구니없거나 너무 놀라다", chosung: "ㄱㄱ ㅁㅎㄷ", keywords: ["어처구니없", "놀라"] },
+            { type: "관용어", idiom: "길이 들다", meaning: "어떤 버릇이나 습관에 익숙해지다", chosung: "ㄱㅇ ㄷㄷ", keywords: ["버릇", "습관", "익숙"] },
+            { type: "속담", idiom: "꿈보다 해몽이 좋다", meaning: "좋지 않은 일도 그럴듯하게 좋은 쪽으로 해석함을 이르는 말", chosung: "ㄲㅂㄷ ㅎㅁㅇ ㅈㄷ", keywords: ["좋지 않은", "좋게 해석"] },
+            { type: "관용어", idiom: "눈이 빠지도록 기다리다", meaning: "몹시 애타게 오래 기다리다", chosung: "ㄴㅇ ㅃㅈㄷㄹ ㄱㄷㄹㄷ", keywords: ["애타게", "오래", "기다리"] },
+            { type: "관용어", idiom: "다리를 놓다", meaning: "서로 관계를 맺도록 중개하다", chosung: "ㄷㄹㄹ ㄴㄷ", keywords: ["중개", "이어주", "연결"] },
+            { type: "관용어", idiom: "뒤를 봐주다", meaning: "뒤에서 남몰래 도와주다", chosung: "ㄷㄹ ㅂㅈㄷ", keywords: ["뒤에서", "도와주"] },
+            { type: "관용어", idiom: "마음을 놓다", meaning: "걱정을 덜고 안심하다", chosung: "ㅁㅇㅇ ㄴㄷ", keywords: ["안심", "걱정을 덜"] },
+            { type: "관용어", idiom: "마음을 비우다", meaning: "욕심을 버리다", chosung: "ㅁㅇㅇ ㅂㅇㄷ", keywords: ["욕심을 버리"] },
+            { type: "관용어", idiom: "마음이 가볍다", meaning: "걱정이 사라져 홀가분하다", chosung: "ㅁㅇㅇ ㄱㅂㄷ", keywords: ["걱정이 사라", "홀가분"] },
+            { type: "관용어", idiom: "마음이 무겁다", meaning: "걱정이 많고 괴롭다", chosung: "ㅁㅇㅇ ㅁㄱㄷ", keywords: ["걱정이 많", "괴롭"] },
+            { type: "관용어", idiom: "목을 빼다", meaning: "몹시 간절히 기다리다", chosung: "ㅁㅇ ㅃㄷ", keywords: ["간절히", "기다리"] },
+            { type: "관용어", idiom: "배를 곯다", meaning: "끼니를 제대로 먹지 못하고 굶다", chosung: "ㅂㄹ ㄱㄷ", keywords: ["끼니", "굶", "먹지 못"] },
+            { type: "관용어", idiom: "버스를 놓치다", meaning: "좋은 기회나 때를 놓치다", chosung: "ㅂㅅㄹ ㄴㅊㄷ", keywords: ["기회를 놓치", "때를 놓치"] },
+            { type: "관용어", idiom: "병이 나다", meaning: "심한 걱정이나 스트레스로 몸이 상하다", chosung: "ㅂㅇ ㄴㄷ", keywords: ["스트레스", "몸이 상", "걱정"] },
+            { type: "관용어", idiom: "속이 타다", meaning: "몹시 애가 타고 답답하다", chosung: "ㅅㅇ ㅌㄷ", keywords: ["애가 타", "답답"] },
+            { type: "관용어", idiom: "손을 빌리다", meaning: "남의 도움을 받다", chosung: "ㅅㅇ ㅂㄹㄷ", keywords: ["도움을 받"] },
+            { type: "관용어", idiom: "잔머리를 굴리다", meaning: "얕은 꾀를 부리다", chosung: "ㅈㅁㄹㄹ ㄱㄹㄷ", keywords: ["얕은 꾀", "꾀를 부리"] },
+            { type: "관용어", idiom: "잠을 설치다", meaning: "잠을 자다가 자꾸 깨어 제대로 못 자다", chosung: "ㅈㅇ ㅅㅊㄷ", keywords: ["자꾸 깨", "제대로 못 자"] },
+            { type: "관용어", idiom: "정을 떼다", meaning: "정이 들었던 마음을 끊다", chosung: "ㅈㅇ ㄸㄷ", keywords: ["정", "마음을 끊"] },
+            { type: "관용어", idiom: "주머니가 가볍다", meaning: "가진 돈이 적거나 없다", chosung: "ㅈㅁㄴㄱ ㄱㅂㄷ", keywords: ["돈이 없", "돈이 적"] },
+            { type: "관용어", idiom: "찬밥 신세", meaning: "제대로 대우받지 못하는 처지", chosung: "ㅊㅂ ㅅㅅ", keywords: ["대우받지 못", "푸대접"] },
+            { type: "관용어", idiom: "코를 찌르다", meaning: "냄새가 매우 강하게 나다", chosung: "ㅋㄹ ㅉㄹㄷ", keywords: ["냄새", "강하"] },
+            { type: "관용어", idiom: "파리를 날리다", meaning: "장사가 안되어 손님이 없다", chosung: "ㅍㄹㄹ ㄴㄹㄷ", keywords: ["장사가 안", "손님이 없"] },
+            { type: "관용어", idiom: "혀를 내두르다", meaning: "몹시 놀라거나 어이없어 말을 못 하다", chosung: "ㅎㄹ ㄴㄷㄹㄷ", keywords: ["몹시 놀라", "질리"] },
+            { type: "관용어", idiom: "화가 머리끝까지 치밀다", meaning: "몹시 심하게 화가 나다", chosung: "ㅎㄱ ㅁㄹㄲㄲㅈ ㅊㅁㄷ", keywords: ["몹시", "화가 나"] },
+            { type: "관용어", idiom: "환장을 하다", meaning: "어떤 것에 정신없이 빠지다", chosung: "ㅎㅈㅇ ㅎㄷ", keywords: ["정신없이", "빠지"] },
         ];
 
         // ---- Settings 저장/복원 (localStorage) ----
