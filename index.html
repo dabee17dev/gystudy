@@ -480,52 +480,44 @@
         }
 
         /* ---- 반응형 (모바일 / 작은 화면) ---- */
-        @media (max-width: 600px) {
-            html { font-size: 15px; }
+        /* 카드가 화면을 꽉 채우도록 (세로 좁은 폭 OR 가로 낮은 높이) */
+        @media (max-width: 600px), (max-height: 500px) {
             body {
                 height: 100dvh;
-                padding: 0.75rem 0;
+                padding: 0;
             }
+            #app { width: 100%; }
+            .container, .dict-container {
+                width: 100%;
+                max-width: 100%;
+                height: 100dvh;
+                max-height: 100dvh;
+                border-radius: 0;
+                border: none;
+                box-shadow: none;
+            }
+            /* 인라인 height/max-height 가진 패널 override */
+            #settings-area, #ranking-area {
+                height: 100dvh !important;
+                max-height: 100dvh !important;
+            }
+        }
+
+        /* 세로(좁은 폭) 모바일 */
+        @media (max-width: 600px) {
+            html { font-size: 15px; }
             h1 { font-size: 2rem; }
-
-            .container {
-                padding: 2rem 1.25rem;
-                height: auto;
-                max-height: 94vh;
-                width: 100%;
-                max-width: 94vw;
-            }
-
-            .dict-container {
-                padding: 1.25rem;
-                height: auto;
-                max-height: 94vh;
-                width: 100%;
-                max-width: 94vw;
-            }
-
-            /* 인라인 height/padding 가진 설정 화면 override */
-            #settings-area {
-                height: auto !important;
-                max-height: 94vh !important;
-                padding: 2rem 1.25rem !important;
-            }
+            .container { padding: 1.75rem 1.25rem; }
+            .dict-container { padding: 1.25rem; }
+            #settings-area { padding: 1.75rem 1.25rem !important; }
+            #ranking-area { padding: 1.5rem 1.25rem !important; }
 
             .menu-btn, .option-btn, .action-btn {
                 font-size: 1rem;
                 padding: 0.9rem;
             }
-
-            .settings-btn {
-                bottom: 0.75rem;
-                left: 0.75rem;
-                font-size: 1.3rem;
-            }
-            .creator-info {
-                bottom: 0.75rem;
-                right: 0.75rem;
-                font-size: 0.8rem;
-            }
+            .settings-btn { bottom: 0.75rem; left: 0.75rem; font-size: 1.3rem; }
+            .creator-info { bottom: 0.75rem; right: 0.75rem; font-size: 0.8rem; }
 
             /* 도감 행: 좁은 화면에서 표현(위) / 뜻(아래) 세로 배치 */
             .dict-row {
@@ -553,6 +545,26 @@
                 padding-left: 2.2rem; /* 번호 폭만큼 들여써 표현과 정렬 */
                 font-size: 0.9rem;
             }
+        }
+
+        /* 가로(낮은 높이) 모바일: 헤더 압축해 목록 공간 확보 */
+        @media (max-height: 500px) {
+            html { font-size: 14px; }
+            h1 { font-size: 1.6rem; margin-bottom: 0.5rem; }
+            .container { padding: 1rem 1.25rem; }
+            .dict-container { padding: 0.6rem 1rem; }
+            #settings-area { padding: 1rem 1.25rem !important; }
+            #ranking-area { padding: 0.75rem 1rem !important; }
+
+            /* 도감 헤더 최소화 → 목록이 두 줄만 보이던 문제 해소 */
+            .dict-header { display: none; }
+            .dict-title-row { margin-bottom: 0.35rem; }
+            .dict-title-row h2 { font-size: 1.15rem; }
+            .dict-tabs { margin-bottom: 0.4rem; }
+            .dict-tab { padding: 0.4rem; }
+            .dict-search { margin-bottom: 0.4rem; padding: 0.45rem 0.8rem; }
+            .dict-row { padding: 0.45rem 1rem; }
+            .dict-close-btn { padding: 0.5rem; margin-top: 0.6rem; }
         }
 
     </style>
@@ -724,7 +736,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.9.0";
+        const APP_VERSION = "1.9.1";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
