@@ -871,7 +871,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.12.0";
+        const APP_VERSION = "1.13.0";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -1686,6 +1686,34 @@
             }
         }
 
+        // 정답 유사도 판정: 약 75% 이상 비슷하면 통과 (조사/어미 차이·경미한 오타 허용)
+        const FUZZY_THRESHOLD = 0.75;
+
+        function levenshtein(a, b) {
+            const m = a.length, n = b.length;
+            if (m === 0) return n;
+            if (n === 0) return m;
+            let prev = Array.from({ length: n + 1 }, (_, i) => i);
+            for (let i = 1; i <= m; i++) {
+                const cur = [i];
+                for (let j = 1; j <= n; j++) {
+                    const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+                    cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+                }
+                prev = cur;
+            }
+            return prev[n];
+        }
+
+        function isSimilarAnswer(input, answer) {
+            const x = input.replace(/\s/g, '');
+            const y = answer.replace(/\s/g, '');
+            if (!x || !y) return false;
+            if (x === y) return true;
+            const sim = 1 - levenshtein(x, y) / Math.max(x.length, y.length);
+            return sim >= FUZZY_THRESHOLD;
+        }
+
         function submitAnswer() {
             if (gameOver) return;
             const q = currentQuestions[currentIndex];
@@ -1695,7 +1723,7 @@
             let isCorrect = false;
 
             if (currentMode === 1 || currentMode === 3) {
-                if (input.replace(/\s/g, '') === q.idiom.replace(/\s/g, '')) {
+                if (isSimilarAnswer(input, q.idiom)) {
                     isCorrect = true;
                 }
             } else if (currentMode === 4) {
