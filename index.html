@@ -548,8 +548,8 @@
             <div style="text-align: left; margin-bottom: 2rem;">
                 <label style="font-weight: bold; display: block; margin-bottom: 0.5rem;">🎚️ 난이도 <span style="font-weight: normal; color: var(--text-dim);">('뜻 적기' 채점 기준)</span></label>
                 <select id="setup-difficulty" class="input-box" style="margin: 0; cursor: pointer;">
-                    <option value="easy" selected>쉬움 — 핵심어 1개 이상</option>
-                    <option value="hard">하드 — 핵심어 2개 이상</option>
+                    <option value="easy" selected>쉬움 — 핵심어 2개 이상</option>
+                    <option value="hard">하드 — 핵심어 3개 이상</option>
                 </select>
             </div>
 
@@ -592,7 +592,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.3.0";
+        const APP_VERSION = "1.3.1";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -1149,8 +1149,8 @@
                 }
             } else if (currentMode === 4) {
                 let matchCount = q.keywords.filter(kw => input.includes(kw)).length;
-                // 쉬움: 1개 이상, 하드: 2개 이상(키워드 1개뿐이면 1개)
-                const required = difficulty === 'hard' ? Math.min(2, q.keywords.length) : 1;
+                // 쉬움: 2개 이상, 하드: 3개 이상 (키워드가 그보다 적은 항목은 전부 포함해야 정답)
+                const required = difficulty === 'hard' ? Math.min(3, q.keywords.length) : Math.min(2, q.keywords.length);
                 if (matchCount >= required) {
                     isCorrect = true;
                 }
