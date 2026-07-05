@@ -240,43 +240,69 @@
         }
 
         /* Settings Button */
+        /* 카드 내 푸터 (설정 · 제작자 · 버전) */
+        .menu-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            width: 100%;
+            margin-top: auto;
+            padding-top: 1rem;
+        }
         .settings-btn {
-            position: fixed;
-            bottom: 1.5rem;
-            left: 1.5rem;
             background: transparent;
-            color: var(--text-dim);
-            border: none;
-            font-size: 1.5rem;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.35rem 0.7rem;
             cursor: pointer;
-            transition: color 0.3s ease;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
         }
         .settings-btn:hover {
             color: var(--text-main);
-            transform: rotate(45deg);
+            background: var(--bg-btn-hover);
         }
-
-        /* Creator Info */
         .creator-info {
-            position: fixed;
-            bottom: 1.5rem;
-            right: 1.5rem;
             color: var(--text-dim);
-            font-size: 0.95rem;
+            font-size: 0.8rem;
             font-weight: 500;
-            opacity: 0.8;
-            pointer-events: none;
             text-align: right;
         }
-
-        /* Version Tag */
         .version-tag {
-            margin-top: 2px;
             font-size: 0.7rem;
-            font-weight: 500;
             letter-spacing: 0.05em;
-            opacity: 0.75;
+            opacity: 0.85;
+            margin-left: 0.15rem;
         }
+
+        /* 게임 선택 2x2 카드 */
+        .game-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.6rem;
+            width: 100%;
+        }
+        .game-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.2rem;
+            padding: 1.1rem 0.5rem;
+            background: var(--bg-btn);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .game-card:hover { background: var(--bg-btn-hover); transform: translateY(-2px); }
+        .gc-emoji { font-size: 1.7rem; line-height: 1; }
+        .gc-title { font-weight: 700; font-size: 1.05rem; color: var(--text-main); }
+        .gc-sub { font-size: 0.75rem; color: var(--text-muted); }
 
         /* Tabs */
         .dict-tabs {
@@ -516,8 +542,6 @@
                 font-size: 1rem;
                 padding: 0.9rem;
             }
-            .settings-btn { bottom: 0.75rem; left: 0.75rem; font-size: 1.3rem; }
-            .creator-info { bottom: 0.75rem; right: 0.75rem; font-size: 0.8rem; }
 
             /* 도감 행: 좁은 화면에서 표현(위) / 뜻(아래) 세로 배치 */
             .dict-row {
@@ -565,50 +589,56 @@
             .dict-search { margin-bottom: 0.4rem; padding: 0.45rem 0.8rem; }
             .dict-row { padding: 0.45rem 1rem; }
             .dict-close-btn { padding: 0.5rem; margin-top: 0.6rem; }
+
+            /* 메인 메뉴: 가로에서 스크롤 없이 들어오도록 압축 */
+            #main-menu > p { display: none; }              /* 부제 숨김 */
+            .game-card { padding: 0.55rem 0.4rem; border-radius: 10px; }
+            .gc-emoji { font-size: 1.25rem; }
+            .gc-title { font-size: 0.95rem; }
+            .gc-sub { font-size: 0.68rem; }
+            .game-grid { gap: 0.4rem; }
+            .menu-footer { padding-top: 0.5rem; }
         }
 
     </style>
 </head>
 <body>
     <div id="app">
-        <!-- Settings Button -->
-        <button class="settings-btn" id="global-settings-btn" title="설정" onclick="showSettings()">⚙️</button>
-
-        <!-- Creator Info -->
-        <div class="creator-info">
-            <div>by. 청아초 삼다수반</div>
-            <div class="version-tag" id="app-version"></div>
-        </div>
-
         <!-- Main Menu -->
-        <div class="container" id="main-menu">
+        <div class="container" id="main-menu" style="justify-content: flex-start;">
             <h1>관용표현 & 속담 퀴즈</h1>
             <p style="margin-bottom: 1.5rem; color: var(--text-dim);">재미있게 배우는 우리말 관용표현과 속담!</p>
 
             <!-- 로그인/가입 (로그아웃 상태) -->
-            <div id="login-box" style="margin-bottom: 1.5rem;">
+            <div id="login-box" style="margin-bottom: 1rem;">
                 <input type="text" id="login-nickname" class="input-box" maxlength="12" placeholder="이름 (같은 이름이면 로그인)" style="margin: 0 0 0.5rem 0;" onkeypress="if(event.key==='Enter') login()">
                 <button class="menu-btn" style="background: var(--highlight); color: #fff; border: none; font-weight: bold; margin: 0;" onclick="login()">로그인 / 가입</button>
                 <div id="login-msg" style="min-height: 1.2rem; margin-top: 0.5rem; font-size: 0.9rem;"></div>
             </div>
 
             <!-- 플레이어 정보 (로그인 상태) -->
-            <div id="player-box" style="display: none; align-items: center; justify-content: center; gap: 0.75rem; margin-bottom: 1.5rem; font-size: 1.1rem;">
+            <div id="player-box" style="display: none; align-items: center; justify-content: center; gap: 0.75rem; margin-bottom: 1rem; font-size: 1.1rem;">
                 <span>👤 <b id="player-name"></b>님</span>
                 <button class="action-btn" style="width: auto; padding: 0.4rem 1rem; margin: 0; font-size: 0.9rem;" onclick="logout()">로그아웃</button>
             </div>
 
-            <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem;">
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
                 <button class="menu-btn" style="border-color: var(--highlight); color: var(--highlight); margin: 0;" onclick="showDict()">📚 사전</button>
                 <button class="menu-btn" style="border-color: var(--highlight); color: var(--highlight); margin: 0;" onclick="showRanking()">🏆 랭킹</button>
             </div>
 
-            <!-- 게임 메뉴 (로그인 시에만 노출) -->
-            <div id="game-menu" style="display: none;">
-                <button class="menu-btn" onclick="openSetup(1)">1. 뜻 보고 맞추기 (주관식)</button>
-                <button class="menu-btn" onclick="openSetup(2)">2. 단어 보고 뜻 맞추기 (객관식)</button>
-                <button class="menu-btn" onclick="openSetup(3)">3. 초성 퀴즈 (주관식)</button>
-                <button class="menu-btn" onclick="openSetup(4)">4. 뜻 적기 퀴즈 (키워드 주관식)</button>
+            <!-- 게임 메뉴 (로그인 시에만 노출) — 2x2 카드 -->
+            <div id="game-menu" class="game-grid" style="display: none;">
+                <button class="game-card" onclick="openSetup(1)"><span class="gc-emoji">💡</span><span class="gc-title">뜻 보고 표현</span><span class="gc-sub">주관식</span></button>
+                <button class="game-card" onclick="openSetup(2)"><span class="gc-emoji">📖</span><span class="gc-title">표현 보고 뜻</span><span class="gc-sub">객관식</span></button>
+                <button class="game-card" onclick="openSetup(3)"><span class="gc-emoji">🔤</span><span class="gc-title">초성 퀴즈</span><span class="gc-sub">주관식</span></button>
+                <button class="game-card" onclick="openSetup(4)"><span class="gc-emoji">✍️</span><span class="gc-title">뜻 적기</span><span class="gc-sub">키워드</span></button>
+            </div>
+
+            <!-- 카드 내 푸터: 설정 · 제작자 · 버전 -->
+            <div class="menu-footer">
+                <button class="settings-btn" id="global-settings-btn" title="설정" onclick="showSettings()">⚙️ 설정</button>
+                <div class="creator-info">by. 청아초 삼다수반 <span class="version-tag" id="app-version"></span></div>
             </div>
         </div>
 
@@ -730,7 +760,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.10.0";
+        const APP_VERSION = "1.10.1";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -1222,7 +1252,7 @@
             const loggedIn = !!currentPlayer;
             document.getElementById('login-box').style.display = loggedIn ? 'none' : 'block';
             document.getElementById('player-box').style.display = loggedIn ? 'flex' : 'none';
-            document.getElementById('game-menu').style.display = loggedIn ? 'block' : 'none';
+            document.getElementById('game-menu').style.display = loggedIn ? 'grid' : 'none';
             if (loggedIn) document.getElementById('player-name').innerText = currentPlayer;
         }
 

@@ -1,6 +1,6 @@
 {
   "name": "gystudy",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "description": "관용표현 & 속담 퀴즈 웹앱",
   "scripts": {
     "dev": "vite",
