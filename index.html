@@ -364,6 +364,33 @@
             100% { transform: scale(0.95); opacity: 0.85; }
         }
 
+        /* QR 오버레이 */
+        #qr-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 1100;
+            background: rgba(0, 0, 0, 0.6);
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .qr-box {
+            background: var(--bg-container);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-align: center;
+            max-width: 90vw;
+        }
+        .qr-img {
+            width: 260px;
+            max-width: 70vw;
+            height: auto;
+            border-radius: 8px;
+            display: block;
+        }
+
         /* Tabs */
         .dict-tabs {
             display: flex;
@@ -664,6 +691,16 @@
             .opt-label { font-size: 0.68rem; margin-bottom: 0.12rem; }
             .seg-btn { padding: 0.28rem 0.2rem; font-size: 0.8rem; }
             .menu-footer { padding-top: 0.4rem; }
+
+            /* 게임 화면: 가로에서 스크롤 없이 한 화면에 */
+            #game-area { justify-content: flex-start; }
+            #game-area .header { margin-bottom: 0.8rem; }
+            #game-area .question { font-size: 1rem; margin-bottom: 0.8rem; line-height: 1.4; }
+            #game-area .input-box { padding: 0.55rem; margin: 0.5rem 0; }
+            #game-area .option-btn { padding: 0.5rem; font-size: 0.9rem; margin: 0.3rem 0; }
+            #game-area .action-btn { padding: 0.55rem; margin-top: 0.5rem; }
+            #game-area .feedback { margin-top: 0.5rem; font-size: 1rem; }
+            #game-area #next-btn { margin-top: 0.5rem; }
         }
 
     </style>
@@ -696,9 +733,9 @@
             <!-- 게임 메뉴 (로그인 시에만 노출) — 2x2 카드, 누르면 바로 시작 -->
             <div id="game-menu" class="game-grid" style="display: none;">
                 <button class="game-card" onclick="startFromMenu(1)"><span class="gc-emoji">💡</span><span class="gc-title">뜻 보고 표현</span><span class="gc-sub">주관식</span></button>
-                <button class="game-card" onclick="startFromMenu(2)"><span class="gc-emoji">📖</span><span class="gc-title">표현 보고 뜻</span><span class="gc-sub">객관식</span></button>
-                <button class="game-card" onclick="startFromMenu(3)"><span class="gc-emoji">🔤</span><span class="gc-title">초성 퀴즈</span><span class="gc-sub">주관식</span></button>
                 <button class="game-card" onclick="startFromMenu(4)"><span class="gc-emoji">✍️</span><span class="gc-title">뜻 적기</span><span class="gc-sub">키워드</span></button>
+                <button class="game-card" onclick="startFromMenu(3)"><span class="gc-emoji">🔤</span><span class="gc-title">초성 퀴즈</span><span class="gc-sub">주관식</span></button>
+                <button class="game-card" onclick="startFromMenu(2)"><span class="gc-emoji">📖</span><span class="gc-title">매칭 게임</span><span class="gc-sub">객관식</span></button>
             </div>
 
             <!-- 시간 · 난이도 선택 (게임 시작 시 적용) -->
@@ -719,9 +756,12 @@
                 </div>
             </div>
 
-            <!-- 카드 내 푸터: 설정 · 제작자 · 버전 -->
+            <!-- 카드 내 푸터: 설정 · QR · 제작자 · 버전 -->
             <div class="menu-footer">
-                <button class="settings-btn" id="global-settings-btn" title="설정" onclick="showSettings()">⚙️ 설정</button>
+                <div style="display: flex; gap: 0.4rem;">
+                    <button class="settings-btn" id="global-settings-btn" title="설정" onclick="showSettings()">⚙️ 설정</button>
+                    <button class="settings-btn" title="QR 확인" onclick="showQR()">📱 QR</button>
+                </div>
                 <div class="creator-info">by. 청아초 삼다수반 <span class="version-tag" id="app-version"></span></div>
             </div>
         </div>
@@ -784,12 +824,21 @@
         <!-- Countdown Overlay -->
         <div id="countdown-overlay"><div id="countdown-num"></div></div>
 
+        <!-- QR Overlay -->
+        <div id="qr-overlay" onclick="hideQR()">
+            <div class="qr-box" onclick="event.stopPropagation()">
+                <h3 style="margin-bottom: 1rem;">📱 QR 코드</h3>
+                <img src="qr.jpg" alt="QR 코드" class="qr-img">
+                <button class="menu-btn" style="margin-top: 1rem;" onclick="hideQR()">닫기</button>
+            </div>
+        </div>
+
         <!-- Game Area -->
         <div class="container" id="game-area">
             <button class="close-btn" title="게임 종료" onclick="goHome()">✖</button>
             <div class="header">
-                <span id="score-display">맞힘: 0</span>
                 <span id="timer-display" style="font-weight: bold; color: #ef4444; font-size: 1.2rem;">⏱️ <span id="time-left">0:00</span></span>
+                <span id="score-display">맞힘: 0</span>
                 <span id="progress-display">문제 1</span>
             </div>
             <div id="question-text" class="question">질문 내용</div>
@@ -822,7 +871,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.11.0";
+        const APP_VERSION = "1.12.0";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -1373,6 +1422,9 @@
             document.getElementById('main-menu').style.display = 'flex';
             document.getElementById('global-settings-btn').style.display = 'block';
         }
+
+        function showQR() { document.getElementById('qr-overlay').style.display = 'flex'; }
+        function hideQR() { document.getElementById('qr-overlay').style.display = 'none'; }
 
         // ---- 도감(Dictionary) Logic ----
         let currentDictType = '속담'; // 기본값
