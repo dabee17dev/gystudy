@@ -167,7 +167,7 @@
             color: var(--text-dim);
         }
 
-        #game-area, #result-area, #dict-area, #settings-area, #setup-area, #ranking-area {
+        #game-area, #result-area, #dict-area, #settings-area, #ranking-area {
             display: none;
         }
 
@@ -303,6 +303,66 @@
         .gc-emoji { font-size: 1.7rem; line-height: 1; }
         .gc-title { font-weight: 700; font-size: 1.05rem; color: var(--text-main); }
         .gc-sub { font-size: 0.75rem; color: var(--text-muted); }
+
+        /* 시간 · 난이도 선택 (세그먼트) */
+        #menu-options {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 0.9rem;
+        }
+        .opt-group { flex: 1; text-align: left; }
+        .opt-label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
+        }
+        .seg {
+            display: flex;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 3px;
+            gap: 3px;
+        }
+        .seg-btn {
+            flex: 1;
+            padding: 0.4rem 0.2rem;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .seg-btn.active {
+            background: var(--highlight);
+            color: #fff;
+        }
+
+        /* 카운트다운 오버레이 */
+        #countdown-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background: var(--bg-body);
+            align-items: center;
+            justify-content: center;
+        }
+        #countdown-num {
+            font-size: 9rem;
+            font-weight: 800;
+            color: var(--highlight);
+        }
+        @keyframes cd-pop {
+            0%   { transform: scale(0.3); opacity: 0; }
+            45%  { transform: scale(1.15); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.85; }
+        }
 
         /* Tabs */
         .dict-tabs {
@@ -574,8 +634,8 @@
         /* 가로(낮은 높이) 모바일: 헤더 압축해 목록 공간 확보 */
         @media (max-height: 500px) {
             html { font-size: 14px; }
-            h1 { font-size: 1.6rem; margin-bottom: 0.5rem; }
-            .container { padding: 1rem 1.25rem; }
+            h1 { font-size: 1.35rem; margin-bottom: 0.3rem; }
+            .container { padding: 0.75rem 1.25rem; }
             .dict-container { padding: 0.6rem 1rem; }
             #settings-area { padding: 1rem 1.25rem !important; }
             #ranking-area { padding: 0.75rem 1rem !important; }
@@ -592,12 +652,18 @@
 
             /* 메인 메뉴: 가로에서 스크롤 없이 들어오도록 압축 */
             #main-menu > p { display: none; }              /* 부제 숨김 */
-            .game-card { padding: 0.55rem 0.4rem; border-radius: 10px; }
-            .gc-emoji { font-size: 1.25rem; }
-            .gc-title { font-size: 0.95rem; }
-            .gc-sub { font-size: 0.68rem; }
-            .game-grid { gap: 0.4rem; }
-            .menu-footer { padding-top: 0.5rem; }
+            #player-box { margin-bottom: 0.5rem !important; font-size: 1rem !important; }
+            #login-box { margin-bottom: 0.5rem !important; }
+            #main-menu .menu-btn { padding: 0.5rem; font-size: 0.9rem; }
+            .game-card { padding: 0.4rem 0.4rem; border-radius: 10px; }
+            .gc-emoji { font-size: 1.1rem; }
+            .gc-title { font-size: 0.9rem; }
+            .gc-sub { font-size: 0.64rem; }
+            .game-grid { gap: 0.35rem; }
+            #menu-options { margin-top: 0.5rem; gap: 0.5rem; }
+            .opt-label { font-size: 0.68rem; margin-bottom: 0.12rem; }
+            .seg-btn { padding: 0.28rem 0.2rem; font-size: 0.8rem; }
+            .menu-footer { padding-top: 0.4rem; }
         }
 
     </style>
@@ -627,12 +693,30 @@
                 <button class="menu-btn" style="border-color: var(--highlight); color: var(--highlight); margin: 0;" onclick="showRanking()">🏆 랭킹</button>
             </div>
 
-            <!-- 게임 메뉴 (로그인 시에만 노출) — 2x2 카드 -->
+            <!-- 게임 메뉴 (로그인 시에만 노출) — 2x2 카드, 누르면 바로 시작 -->
             <div id="game-menu" class="game-grid" style="display: none;">
-                <button class="game-card" onclick="openSetup(1)"><span class="gc-emoji">💡</span><span class="gc-title">뜻 보고 표현</span><span class="gc-sub">주관식</span></button>
-                <button class="game-card" onclick="openSetup(2)"><span class="gc-emoji">📖</span><span class="gc-title">표현 보고 뜻</span><span class="gc-sub">객관식</span></button>
-                <button class="game-card" onclick="openSetup(3)"><span class="gc-emoji">🔤</span><span class="gc-title">초성 퀴즈</span><span class="gc-sub">주관식</span></button>
-                <button class="game-card" onclick="openSetup(4)"><span class="gc-emoji">✍️</span><span class="gc-title">뜻 적기</span><span class="gc-sub">키워드</span></button>
+                <button class="game-card" onclick="startFromMenu(1)"><span class="gc-emoji">💡</span><span class="gc-title">뜻 보고 표현</span><span class="gc-sub">주관식</span></button>
+                <button class="game-card" onclick="startFromMenu(2)"><span class="gc-emoji">📖</span><span class="gc-title">표현 보고 뜻</span><span class="gc-sub">객관식</span></button>
+                <button class="game-card" onclick="startFromMenu(3)"><span class="gc-emoji">🔤</span><span class="gc-title">초성 퀴즈</span><span class="gc-sub">주관식</span></button>
+                <button class="game-card" onclick="startFromMenu(4)"><span class="gc-emoji">✍️</span><span class="gc-title">뜻 적기</span><span class="gc-sub">키워드</span></button>
+            </div>
+
+            <!-- 시간 · 난이도 선택 (게임 시작 시 적용) -->
+            <div id="menu-options" style="display: none;">
+                <div class="opt-group">
+                    <span class="opt-label">⏱️ 시간</span>
+                    <div class="seg">
+                        <button class="seg-btn active" id="mt-60" onclick="selMenuTime(60)">1분</button>
+                        <button class="seg-btn" id="mt-120" onclick="selMenuTime(120)">2분</button>
+                    </div>
+                </div>
+                <div class="opt-group">
+                    <span class="opt-label">🎚️ 난이도</span>
+                    <div class="seg">
+                        <button class="seg-btn active" id="md-easy" onclick="selMenuDiff('easy')">쉬움</button>
+                        <button class="seg-btn" id="md-hard" onclick="selMenuDiff('hard')">하드</button>
+                    </div>
+                </div>
             </div>
 
             <!-- 카드 내 푸터: 설정 · 제작자 · 버전 -->
@@ -697,30 +781,8 @@
             <button class="dict-close-btn" onclick="hideDict()">닫기</button>
         </div>
 
-        <!-- Setup Area -->
-        <div class="container" id="setup-area">
-            <button class="close-btn" onclick="hideSetup()">✕</button>
-            <h2 style="font-size: 2rem; margin-bottom: 0.3rem;">🕹️ 게임 세부 설정</h2>
-            <p id="setup-player" style="color: var(--text-dim); margin-bottom: 1.5rem;"></p>
-
-            <div style="text-align: left; margin-bottom: 1.5rem;">
-                <label style="font-weight: bold; display: block; margin-bottom: 0.5rem;">⏱️ 제한시간 (전체) <span style="font-weight: normal; color: var(--text-dim);">시간 내 최대한 많이!</span></label>
-                <select id="setup-time" class="input-box" style="margin: 0; cursor: pointer;">
-                    <option value="60">1분</option>
-                    <option value="120" selected>2분</option>
-                </select>
-            </div>
-
-            <div style="text-align: left; margin-bottom: 2rem;">
-                <label style="font-weight: bold; display: block; margin-bottom: 0.5rem;">🎚️ 난이도 <span style="font-weight: normal; color: var(--text-dim);">('뜻 적기' 채점 기준)</span></label>
-                <select id="setup-difficulty" class="input-box" style="margin: 0; cursor: pointer;">
-                    <option value="easy" selected>쉬움 — 핵심어 2개 이상</option>
-                    <option value="hard">하드 — 핵심어 전부 포함</option>
-                </select>
-            </div>
-
-            <button class="menu-btn" style="background: var(--highlight); color: white; border: none; font-size: 1.2rem; font-weight: bold; padding: 1.2rem;" onclick="executeGameStart()">🚀 게임 시작!</button>
-        </div>
+        <!-- Countdown Overlay -->
+        <div id="countdown-overlay"><div id="countdown-num"></div></div>
 
         <!-- Game Area -->
         <div class="container" id="game-area">
@@ -760,7 +822,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.10.1";
+        const APP_VERSION = "1.11.0";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -1253,6 +1315,7 @@
             document.getElementById('login-box').style.display = loggedIn ? 'none' : 'block';
             document.getElementById('player-box').style.display = loggedIn ? 'flex' : 'none';
             document.getElementById('game-menu').style.display = loggedIn ? 'grid' : 'none';
+            document.getElementById('menu-options').style.display = loggedIn ? 'flex' : 'none';
             if (loggedIn) document.getElementById('player-name').innerText = currentPlayer;
         }
 
@@ -1397,6 +1460,8 @@
         let gameOver = false;
         let setupMode = 1;
         let difficulty = 'easy'; // 'easy' | 'hard' — 모드4('뜻 적기') 채점 엄격도
+        let menuTime = 60;       // 메인에서 선택한 제한시간(초)
+        let menuDiff = 'easy';   // 메인에서 선택한 난이도
 
         function shuffle(array) {
             let currentIndex = array.length,  randomIndex;
@@ -1410,35 +1475,61 @@
 
         function goHome() {
             stopTimer();
+            document.getElementById('countdown-overlay').style.display = 'none';
             document.getElementById('result-area').style.display = 'none';
             document.getElementById('game-area').style.display = 'none';
-            document.getElementById('setup-area').style.display = 'none';
             document.getElementById('ranking-area').style.display = 'none';
             document.getElementById('main-menu').style.display = 'flex';
             document.getElementById('global-settings-btn').style.display = 'block';
         }
 
-        function openSetup(mode) {
+        // 메인에서 시간/난이도 선택 (세그먼트)
+        function selMenuTime(t) {
+            menuTime = t;
+            document.getElementById('mt-60').className = t === 60 ? 'seg-btn active' : 'seg-btn';
+            document.getElementById('mt-120').className = t === 120 ? 'seg-btn active' : 'seg-btn';
+        }
+        function selMenuDiff(d) {
+            menuDiff = d;
+            document.getElementById('md-easy').className = d === 'easy' ? 'seg-btn active' : 'seg-btn';
+            document.getElementById('md-hard').className = d === 'hard' ? 'seg-btn active' : 'seg-btn';
+        }
+
+        // 게임 카드 클릭 → 카운트다운 후 즉시 시작
+        function startFromMenu(mode) {
             if (!currentPlayer) { alert('먼저 이름으로 로그인해 주세요.'); return; }
             setupMode = mode;
-            document.getElementById('setup-player').innerText = `👤 ${currentPlayer}님`;
+            playerNickname = currentPlayer;
+            totalTime = menuTime;
+            difficulty = menuDiff;
             document.getElementById('main-menu').style.display = 'none';
             document.getElementById('global-settings-btn').style.display = 'none';
-            document.getElementById('setup-area').style.display = 'flex';
+            runCountdown(() => startGame(mode));
         }
 
-        function hideSetup() {
-            goHome();
-        }
-
-        function executeGameStart() {
-            if (!currentPlayer) { alert('먼저 이름으로 로그인해 주세요.'); goHome(); return; }
-            playerNickname = currentPlayer;
-            totalTime = parseInt(document.getElementById('setup-time').value);
-            difficulty = document.getElementById('setup-difficulty').value;
-
-            document.getElementById('setup-area').style.display = 'none';
-            startGame(setupMode);
+        // 3, 2, 1 카운트다운 후 콜백 실행
+        function runCountdown(onDone) {
+            const overlay = document.getElementById('countdown-overlay');
+            const num = document.getElementById('countdown-num');
+            overlay.style.display = 'flex';
+            const show = (txt) => {
+                num.innerText = txt;
+                num.style.animation = 'none';
+                void num.offsetWidth;   // 리플로우로 애니메이션 재시작
+                num.style.animation = 'cd-pop 0.85s ease';
+            };
+            let n = 3;
+            show(n);
+            const iv = setInterval(() => {
+                n--;
+                if (n > 0) {
+                    show(n);
+                } else {
+                    clearInterval(iv);
+                    show('시작!');
+                    setTimeout(() => { overlay.style.display = 'none'; onDone(); }, 650);
+                }
+            }, 850);
         }
 
         function startGame(mode) {
