@@ -871,14 +871,14 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.13.0";
+        const APP_VERSION = "1.14.0";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
             { type: "관용어", idiom: "발목을 잡다", meaning: "어떤 일에 얽매여 못 벗어남", chosung: "ㅂㅁㅇ ㅈㄷ", keywords: ["얽매여", "벗어나", "못하게", "방해"] },
             { type: "관용어", idiom: "미역국을 먹다", meaning: "시험이나 직장에서 떨어짐", chosung: "ㅁㅇㄱㅇ ㅁㄷ", keywords: ["떨어지", "쫓겨나", "낙방", "불합격", "해고"] },
             { type: "관용어", idiom: "귀가 얇다", meaning: "남의 말을 쉽게 믿음", chosung: "ㄱㄱ ㅇㄷ", keywords: ["남", "말", "쉽게", "받아들이", "믿다", "솔깃"] },
-            { type: "관용어", idiom: "눈코 뜰 새 없다", meaning: "매우 바쁨", chosung: "ㄴㅋ ㄸ ㅅ ㅇㄷ", keywords: ["바쁘", "바빠", "정신없이"] },
+            { type: "관용어", idiom: "눈코 뜰 새 없다", meaning: "매우 바쁨", chosung: "ㄴㅋ ㄸ ㅅ ㅇㄷ", keywords: ["바쁘", "바빠", "정신없이"] , aliases: ["눈코 뜰 사이 없다"] },
             { type: "관용어", idiom: "입이 무겁다", meaning: "비밀을 잘 지킴", chosung: "ㅇㅇ ㅁㄱㄷ", keywords: ["비밀", "지키", "발설"] },
             { type: "관용어", idiom: "간에 기별도 안 가다", meaning: "먹은 양이 너무 적음", chosung: "ㄱㅇ ㄱㅂㄷ ㅇ ㄱㄷ", keywords: ["적어", "적다", "먹은 것 같지", "부족"] },
             { type: "관용어", idiom: "손이 크다", meaning: "씀씀이가 큼", chosung: "ㅅㅇ ㅋㄷ", keywords: ["씀씀이", "후하", "크다", "많이", "풍족"] },
@@ -886,10 +886,10 @@
             { type: "관용어", idiom: "입술에 침이나 바르지", meaning: "뻔뻔하게 거짓말함", chosung: "ㅇㅅㅇ ㅊㅇㄴ ㅂㄹㅈ", keywords: ["뻔뻔하게", "거짓말", "능청"] },
             { type: "관용어", idiom: "귀에 못이 박히다", meaning: "같은 말을 지겹게 들음", chosung: "ㄱㅇ ㅁㅇ ㅂㅎㄷ", keywords: ["같은 말", "여러 번", "반복", "자주", "듣다"] },
             { type: "관용어", idiom: "가슴에 못을 박다", meaning: "마음에 깊은 상처를 주다", chosung: "ㄱㅅㅇ ㅁㅇ ㅂㄷ", keywords: ["원통한", "마음", "상처", "아프게", "깊은"] },
-            { type: "관용어", idiom: "배가 아프다", meaning: "남 잘되는 걸 질투함", chosung: "ㅂㄱ ㅇㅍㄷ", keywords: ["남이 잘되는", "질투", "시기"] },
+            { type: "관용어", idiom: "배가 아프다", meaning: "남 잘되는 걸 질투함", chosung: "ㅂㄱ ㅇㅍㄷ", keywords: ["남이 잘되는", "질투", "시기"] , aliases: ["사촌이 땅을 사면 배가 아프다"] },
             { type: "관용어", idiom: "발이 넓다", meaning: "아는 사람이 많음", chosung: "ㅂㅇ ㄴㄷ", keywords: ["아는 사람", "많고", "사교성", "인맥"] },
-            { type: "관용어", idiom: "손발이 맞다", meaning: "마음이나 의견이 서로 맞음", chosung: "ㅅㅂㅇ ㅁㄷ", keywords: ["마음", "의견", "서로 맞음", "호흡"] },
-            { type: "관용어", idiom: "발 벗고 나서다", meaning: "어떤 일에 적극적으로 나섬", chosung: "ㅂ ㅂㄱ ㄴㅅㄷ", keywords: ["적극적", "나서다", "앞장서다"] },
+            { type: "관용어", idiom: "손발이 맞다", meaning: "마음이나 의견이 서로 맞음", chosung: "ㅅㅂㅇ ㅁㄷ", keywords: ["마음", "의견", "서로 맞음", "호흡"] , aliases: ["손발이 척척 맞다"] },
+            { type: "관용어", idiom: "발 벗고 나서다", meaning: "어떤 일에 적극적으로 나섬", chosung: "ㅂ ㅂㄱ ㄴㅅㄷ", keywords: ["적극적", "나서다", "앞장서다"] , aliases: ["팔을 걷어붙이다"] },
             { type: "관용어", idiom: "손에 땀을 쥐다", meaning: "몹시 아슬아슬함", chosung: "ㅅㅇ ㄸㅇ ㅈㄷ", keywords: ["아슬아슬", "긴장", "조마조마"] },
             { type: "관용어", idiom: "귀가 가렵다", meaning: "남이 내 이야기를 하는 것 같음", chosung: "ㄱㄱ ㄱㄹㄷ", keywords: ["남이 내 이야기", "뒷담화"] },
             { type: "관용어", idiom: "눈이 높다", meaning: "물건을 고르는 기준이 높음", chosung: "ㄴㅇ ㄴㄷ", keywords: ["고르는 기준", "높음", "까다롭다"] },
@@ -920,15 +920,15 @@
             { type: "속담", idiom: "우물 안 개구리", meaning: "좁은 세상만 앎", chosung: "ㅇㅁ ㅇ ㄱㄱㄹ", keywords: ["세상을 알지 못하고", "좁은", "견문", "자기만"] },
             { type: "속담", idiom: "고래 싸움에 새우 등 터진다", meaning: "강자들 싸움에 약자가 피해 봄", chosung: "ㄱㄹ ㅆㅇㅇ ㅅㅇ ㄷ ㅌㅈㄷ", keywords: ["강한 자", "싸우는", "약한 자", "피해"] },
             { type: "속담", idiom: "사공이 많으면 배가 산으로 간다", meaning: "주장이 많으면 일 망침", chosung: "ㅅㄱㅇ ㅁㅇㅁ ㅂㄱ ㅅㅇㄹ ㄱㄷ", keywords: ["자기주장", "내세우면", "어렵다", "방향", "잃는다"] },
-            { type: "속담", idiom: "돌다리도 두들겨 보고 건너라", meaning: "아는 일도 조심함", chosung: "ㄷㄷㄹㄷ ㄷㄷㄱ ㅂㄱ ㄱㄴㄹ", keywords: ["아는 일이라도", "세심하게", "주의", "조심"] },
+            { type: "속담", idiom: "돌다리도 두들겨 보고 건너라", meaning: "아는 일도 조심함", chosung: "ㄷㄷㄹㄷ ㄷㄷㄱ ㅂㄱ ㄱㄴㄹ", keywords: ["아는 일이라도", "세심하게", "주의", "조심"] , aliases: ["아는 길도 물어 가라"] },
             { type: "속담", idiom: "발 없는 말이 천 리 간다", meaning: "말은 순식간에 퍼짐", chosung: "ㅂ ㅇㄴ ㅁㅇ ㅊ ㄹ ㄱㄷ", keywords: ["순식간에", "멀리", "퍼져", "조심"] },
             { type: "속담", idiom: "남의 떡이 더 커 보인다", meaning: "내 것보다 남의 것이 더 좋아 보임", chosung: "ㄴㅇ ㄸㅇ ㄷ ㅋ ㅂㅇㄷ", keywords: ["내 것", "남의 것", "좋아 보임"] },
             { type: "속담", idiom: "달면 삼키고 쓰면 뱉는다", meaning: "자신에게 이로우면 취하고 해로우면 버림", chosung: "ㄷㅁ ㅅㅋㄱ ㅆㅁ ㅂㄴㄷ", keywords: ["이로우면", "취하고", "해로우면", "버림"] },
             { type: "속담", idiom: "똥 묻은 개가 겨 묻은 개 나무란다", meaning: "자기 잘못은 모르고 남의 작은 잘못을 흉봄", chosung: "ㄸ ㅁㅇ ㄱㄱ ㄱ ㅁㅇ ㄱ ㄴㅁㄹㄷ", keywords: ["자기 잘못", "남의 작은", "흉봄"] },
-            { type: "속담", idiom: "벼는 익을수록 고개를 숙인다", meaning: "교양 있고 배운 사람일수록 겸손함", chosung: "ㅂㄴ ㅇㅇㅅㄹ ㄱㄱㄹ ㅅㅇㄷ", keywords: ["교양", "배운", "겸손"] },
-            { type: "속담", idiom: "사촌이 땅을 사면 배가 아프다", meaning: "남이 잘되는 것을 시기함", chosung: "ㅅㅊㅇ ㄸㅇ ㅅㅁ ㅂㄱ ㅇㅍㄷ", keywords: ["남이", "잘되는", "시기"] },
+            { type: "속담", idiom: "벼는 익을수록 고개를 숙인다", meaning: "교양 있고 배운 사람일수록 겸손함", chosung: "ㅂㄴ ㅇㅇㅅㄹ ㄱㄱㄹ ㅅㅇㄷ", keywords: ["교양", "배운", "겸손"] , aliases: ["물이 깊을수록 소리가 없다"] },
+            { type: "속담", idiom: "사촌이 땅을 사면 배가 아프다", meaning: "남이 잘되는 것을 시기함", chosung: "ㅅㅊㅇ ㄸㅇ ㅅㅁ ㅂㄱ ㅇㅍㄷ", keywords: ["남이", "잘되는", "시기"] , aliases: ["배가 아프다"] },
             { type: "속담", idiom: "세 살 버릇 여든까지 간다", meaning: "어릴 때 든 버릇은 고치기 힘듦", chosung: "ㅅ ㅅ ㅂㄹ ㅇㄷㄲㅈ ㄱㄷ", keywords: ["어릴 때", "버릇", "고치기 힘"] },
-            { type: "속담", idiom: "아는 길도 물어 가라", meaning: "쉬운 일도 신중하게 처리해야 함", chosung: "ㅇㄴ ㄱㄷ ㅁㅇ ㄱㄹ", keywords: ["쉬운 일", "신중하게", "조심"] },
+            { type: "속담", idiom: "아는 길도 물어 가라", meaning: "쉬운 일도 신중하게 처리해야 함", chosung: "ㅇㄴ ㄱㄷ ㅁㅇ ㄱㄹ", keywords: ["쉬운 일", "신중하게", "조심"] , aliases: ["돌다리도 두들겨 보고 건너라"] },
             { type: "속담", idiom: "열 길 물속은 알아도 한 길 사람 속은 모른다", meaning: "사람의 마음은 헤아리기 힘듦", chosung: "ㅇ ㄱ ㅁㅅㅇ ㅇㅇㄷ ㅎ ㄱ ㅅㄹ ㅅㅇ ㅁㄹㄷ", keywords: ["사람의", "마음", "헤아리기", "어려움"] },
             { type: "속담", idiom: "지렁이도 밟으면 꿈틀한다", meaning: "순하고 약한 사람도 괴롭히면 반항함", chosung: "ㅈㄹㅇㄷ ㅂㅇㅁ ㄲㅌㅎㄷ", keywords: ["순하고", "약한", "반항"] },
             { type: "속담", idiom: "하룻강아지 범 무서운 줄 모른다", meaning: "철없이 함부로 덤비는 사람을 비유", chosung: "ㅎㄹㄱㅇㅈ ㅂ ㅁㅅㅇ ㅈ ㅁㄹㄷ", keywords: ["철없이", "함부로", "덤비는"] },
@@ -952,7 +952,7 @@
             { type: "관용어", idiom: "애간장이 타다", meaning: "몹시 안타깝고 초조하여 걱정이 되다", chosung: "ㅇㄱㅈㅇ ㅌㄷ", keywords: ["안타깝", "초조", "걱정"] },
             { type: "관용어", idiom: "하루에도 열두 번", meaning: "어떤 일이 매우 빈번하게 일어나는 것을 이르는 말", chosung: "ㅎㄹㅇㄷ ㅇㄷ ㅂ", keywords: ["빈번", "자주", "여러 번"] },
             { type: "관용어", idiom: "어금니를 악물다", meaning: "고통이나 분노를 참으려고 이를 악물어 굳은 의지를 나타내다", chosung: "ㅇㄱㄴㄹ ㅇㅁㄷ", keywords: ["고통", "분노", "참", "굳은 의지"] },
-            { type: "속담", idiom: "하나만 알고 둘은 모른다", meaning: "사물을 한 측면만 보고 두루 보지 못하는 어리석음을 이르는 말", chosung: "ㅎㄴㅁ ㅇㄱ ㄷㅇ ㅁㄹㄷ", keywords: ["한 측면", "두루 보지 못", "어리석"] },
+            { type: "속담", idiom: "하나만 알고 둘은 모른다", meaning: "사물을 한 측면만 보고 두루 보지 못하는 어리석음을 이르는 말", chosung: "ㅎㄴㅁ ㅇㄱ ㄷㅇ ㅁㄹㄷ", keywords: ["한 측면", "두루 보지 못", "어리석"] , aliases: ["나무를 보고 숲은 보지 못한다"] },
             { type: "속담", idiom: "공든 탑이 무너지랴", meaning: "힘과 정성을 다한 일은 헛되이 되지 않고 보람이 있으리라는 말", chosung: "ㄱㄷ ㅌㅇ ㅁㄴㅈㄹ", keywords: ["정성", "헛되이 되지", "보람"] },
             { type: "관용어", idiom: "머리를 맞대다", meaning: "함께 의논을 하다", chosung: "ㅁㄹㄹ ㅁㄷㄷ", keywords: ["함께", "의논"] },
             { type: "관용어", idiom: "손발을 맞추다", meaning: "어떤 일을 하는 데 서로 잘 협조하다", chosung: "ㅅㅂㅇ ㅁㅊㄷ", keywords: ["서로", "협조"] },
@@ -984,15 +984,15 @@
             { type: "관용어", idiom: "귀청 떨어지다", meaning: "소리가 몹시 크다", chosung: "ㄱㅊ ㄸㅇㅈㄷ", keywords: ["소리", "크"] },
             { type: "관용어", idiom: "손에 익다", meaning: "일이 손에 익숙해지다", chosung: "ㅅㅇ ㅇㄷ", keywords: ["익숙"] },
             { type: "관용어", idiom: "손을 거치다", meaning: "다른 사람의 소유로 있거나 사람의 노력으로 손질되다", chosung: "ㅅㅇ ㄱㅊㄷ", keywords: ["소유", "노력", "손질"] },
-            { type: "관용어", idiom: "손을 끊다", meaning: "교제나 거래 관계를 중단하다", chosung: "ㅅㅇ ㄲㄷ", keywords: ["교제", "거래", "중단"] },
+            { type: "관용어", idiom: "손을 끊다", meaning: "교제나 거래 관계를 중단하다", chosung: "ㅅㅇ ㄲㄷ", keywords: ["교제", "거래", "중단"] , aliases: ["발을 끊다"] },
             { type: "관용어", idiom: "손을 뻗치다", meaning: "활동 범위를 넓히거나 도움·간섭이 멀리 미치게 하다", chosung: "ㅅㅇ ㅃㅊㄷ", keywords: ["활동 범위", "넓히", "간섭"] },
             { type: "속담", idiom: "손바닥으로 하늘 가리기", meaning: "아무리 숨기려고 해도 소용없음을 이르는 말", chosung: "ㅅㅂㄷㅇㄹ ㅎㄴ ㄱㄹㄱ", keywords: ["숨기", "소용없"] },
             { type: "관용어", idiom: "발을 구르다", meaning: "안타까워하거나 다급해 하다", chosung: "ㅂㅇ ㄱㄹㄷ", keywords: ["안타까워", "다급"] },
-            { type: "관용어", idiom: "발을 끊다", meaning: "왕래를 중단하거나 관계를 끊다", chosung: "ㅂㅇ ㄲㄷ", keywords: ["왕래", "관계를 끊", "중단"] },
+            { type: "관용어", idiom: "발을 끊다", meaning: "왕래를 중단하거나 관계를 끊다", chosung: "ㅂㅇ ㄲㄷ", keywords: ["왕래", "관계를 끊", "중단"] , aliases: ["손을 끊다"] },
             { type: "관용어", idiom: "발을 빼다", meaning: "사람이 일에서 관계를 끊고 물러나다", chosung: "ㅂㅇ ㅃㄷ", keywords: ["관계를 끊", "물러나"] },
             { type: "관용어", idiom: "발바닥에 불이 나다", meaning: "부리나케 여기저기 돌아다니다", chosung: "ㅂㅂㄷㅇ ㅂㅇ ㄴㄷ", keywords: ["부리나케", "돌아다니"] },
             { type: "관용어", idiom: "다리를 뻗고 자다", meaning: "걱정과 시름을 잊고 마음 편하게 자다", chosung: "ㄷㄹㄹ ㅃㄱ ㅈㄷ", keywords: ["걱정", "시름", "편하게 자"] },
-            { type: "관용어", idiom: "팔을 걷어붙이다", meaning: "무슨 일에 적극적이다", chosung: "ㅍㅇ ㄱㅇㅂㅇㄷ", keywords: ["적극적"] },
+            { type: "관용어", idiom: "팔을 걷어붙이다", meaning: "무슨 일에 적극적이다", chosung: "ㅍㅇ ㄱㅇㅂㅇㄷ", keywords: ["적극적"] , aliases: ["발 벗고 나서다"] },
             { type: "관용어", idiom: "간이 부었다", meaning: "겁도 없이 대담해져서 분수 이상의 말이나 행동을 하다", chosung: "ㄱㅇ ㅂㅇㄷ", keywords: ["겁도 없", "대담", "분수 이상"] },
             { type: "관용어", idiom: "간이 배 밖으로 나오다", meaning: "무서워하지 않고 대든다는 뜻", chosung: "ㄱㅇ ㅂ ㅂㅇㄹ ㄴㅇㄷ", keywords: ["무서워하지 않", "대든"] },
             { type: "관용어", idiom: "간이 서늘하다", meaning: "뜻밖에 위험하고 두려운 일을 당하여 몹시 놀라거나 섬뜩해지다", chosung: "ㄱㅇ ㅅㄴㅎㄷ", keywords: ["위험", "두려운", "섬뜩"] },
@@ -1000,9 +1000,9 @@
             { type: "관용어", idiom: "머리를 쥐어짜다", meaning: "몹시 애를 써서 궁리하다", chosung: "ㅁㄹㄹ ㅈㅇㅉㄷ", keywords: ["애를 써", "궁리"] },
             { type: "관용어", idiom: "머리를 식히다", meaning: "긴장을 풀고 마음을 편안하게 하다", chosung: "ㅁㄹㄹ ㅅㅎㄷ", keywords: ["긴장을 풀", "편안"] },
             { type: "관용어", idiom: "목에 힘을 주다", meaning: "거만하게 굴거나 남을 깔보는 듯한 태도를 취하다", chosung: "ㅁㅇ ㅎㅇ ㅈㄷ", keywords: ["거만", "깔보"] },
-            { type: "관용어", idiom: "목이 빠지다", meaning: "몹시 애타게 기다리다", chosung: "ㅁㅇ ㅃㅈㄷ", keywords: ["애타게 기다리"] },
+            { type: "관용어", idiom: "목이 빠지다", meaning: "몹시 애타게 기다리다", chosung: "ㅁㅇ ㅃㅈㄷ", keywords: ["애타게 기다리"] , aliases: ["목을 빼다", "눈이 빠지도록 기다리다"] },
             { type: "관용어", idiom: "얼굴이 뜨겁다", meaning: "남 보기 무안하거나 부끄러워 얼굴이 화끈거릴 정도이다", chosung: "ㅇㄱㅇ ㄸㄱㄷ", keywords: ["무안", "부끄러", "화끈"] },
-            { type: "관용어", idiom: "얼굴이 두껍다", meaning: "부끄러움을 모르고 염치가 없다", chosung: "ㅇㄱㅇ ㄷㄲㄷ", keywords: ["부끄러움을 모르", "염치가 없"] },
+            { type: "관용어", idiom: "얼굴이 두껍다", meaning: "부끄러움을 모르고 염치가 없다", chosung: "ㅇㄱㅇ ㄷㄲㄷ", keywords: ["부끄러움을 모르", "염치가 없"] , aliases: ["낯이 두껍다"] },
             { type: "관용어", idiom: "어안이 벙벙하다", meaning: "뜻밖에 놀랍거나 기막힌 일을 당하여 어리둥절하다", chosung: "ㅇㅇㅇ ㅂㅂㅎㄷ", keywords: ["뜻밖", "어리둥절"] },
             { type: "관용어", idiom: "꼬리를 내리다", meaning: "상대의 압력에 의해 자신의 의지나 주장을 꺾고 순응하다", chosung: "ㄲㄹㄹ ㄴㄹㄷ", keywords: ["의지", "주장을 꺾", "순응"] },
             { type: "관용어", idiom: "꼬리에 꼬리를 물다", meaning: "계속 이어지다", chosung: "ㄲㄹㅇ ㄲㄹㄹ ㅁㄷ", keywords: ["계속", "이어지"] },
@@ -1059,7 +1059,7 @@
             { type: "속담", idiom: "금강산도 식후경", meaning: "아무리 좋은 것도 배가 부르고 난 뒤에야 좋은 줄 안다는 뜻", chosung: "ㄱㄱㅅㄷ ㅅㅎㄱ", keywords: ["배가 부르", "좋은 줄 안"] },
             { type: "속담", idiom: "꿩 대신 닭", meaning: "자기가 쓰려는 것이 없을 때 비슷한 것으로 대신 쓸 수 있다는 말", chosung: "ㄲ ㄷㅅ ㄷ", keywords: ["비슷한 것", "대신"] },
             { type: "속담", idiom: "꿩 먹고 알 먹기", meaning: "한 가지 일을 하고 두 가지 이익을 볼 때 쓰는 말", chosung: "ㄲ ㅁㄱ ㅇ ㅁㄱ", keywords: ["한 가지 일", "두 가지 이익"] },
-            { type: "속담", idiom: "나무를 보고 숲은 보지 못한다", meaning: "부분만 보고 전체는 보지 못한다", chosung: "ㄴㅁㄹ ㅂㄱ ㅅㅇ ㅂㅈ ㅁㅎㄷ", keywords: ["부분만", "전체"] },
+            { type: "속담", idiom: "나무를 보고 숲은 보지 못한다", meaning: "부분만 보고 전체는 보지 못한다", chosung: "ㄴㅁㄹ ㅂㄱ ㅅㅇ ㅂㅈ ㅁㅎㄷ", keywords: ["부분만", "전체"] , aliases: ["하나만 알고 둘은 모른다"] },
             { type: "속담", idiom: "낙숫물로 댓돌을 뚫는다", meaning: "작은 힘이라도 꾸준히 계속하면 큰일을 이룰 수 있다", chosung: "ㄴㅅㅁㄹ ㄷㄷㅇ ㄸㄴㄷ", keywords: ["작은 힘", "꾸준히", "큰일을 이룰"] },
             { type: "속담", idiom: "낫 놓고 기역자도 모른다", meaning: "글자를 모르거나 아주 무식함을 이르는 말", chosung: "ㄴ ㄴㄱ ㄱㅇㅈㄷ ㅁㄹㄷ", keywords: ["글자를 모르", "무식"] },
             { type: "속담", idiom: "남의 잔치에 감 놓아라 배 놓아라 한다", meaning: "쓸데없이 남의 일에 간섭한다는 뜻", chosung: "ㄴㅇ ㅈㅊㅇ ㄱ ㄴㅇㄹ ㅂ ㄴㅇㄹ ㅎㄷ", keywords: ["쓸데없이", "간섭"] },
@@ -1073,12 +1073,12 @@
             { type: "속담", idiom: "드문드문 걸어도 황소걸음", meaning: "속도는 느리나 처리하는 모양이 믿음직하고 알참을 이르는 말", chosung: "ㄷㅁㄷㅁ ㄱㅇㄷ ㅎㅅㄱㅇ", keywords: ["느리", "믿음직", "알참"] },
             { type: "속담", idiom: "등잔 밑이 어둡다", meaning: "가까운 데서 생긴 일을 오히려 잘 모른다는 뜻", chosung: "ㄷㅈ ㅁㅇ ㅇㄷㄷ", keywords: ["가까운", "오히려 모른"] },
             { type: "속담", idiom: "뛰는 놈 위에 나는 놈 있다", meaning: "아무리 재주가 있어도 그보다 나은 사람이 있으니 자랑하지 말라는 뜻", chosung: "ㄸㄴ ㄴ ㅇㅇ ㄴㄴ ㄴ ㅇㄷ", keywords: ["재주", "나은 사람", "자랑하지"] },
-            { type: "속담", idiom: "땅 짚고 헤엄치기", meaning: "아주 쉽게 할 수 있는 일을 이르는 말", chosung: "ㄸ ㅈㄱ ㅎㅇㅊㄱ", keywords: ["아주 쉽게", "식은 죽"] },
+            { type: "속담", idiom: "땅 짚고 헤엄치기", meaning: "아주 쉽게 할 수 있는 일을 이르는 말", chosung: "ㄸ ㅈㄱ ㅎㅇㅊㄱ", keywords: ["아주 쉽게", "식은 죽"] , aliases: ["누워서 떡 먹기", "식은 죽 먹기"] },
             { type: "속담", idiom: "마른 하늘에 날벼락", meaning: "뜻밖에 입는 재난을 이르는 말", chosung: "ㅁㄹ ㅎㄴㅇ ㄴㅂㄹ", keywords: ["뜻밖", "재난"] },
             { type: "속담", idiom: "목구멍이 포도청", meaning: "먹고 살기 위해서는 어떤 일이라도 하게 된다는 뜻", chosung: "ㅁㄱㅁㅇ ㅍㄷㅊ", keywords: ["먹고 살", "어떤 일이라도"] },
             { type: "속담", idiom: "목마른 놈이 우물 판다", meaning: "급히 필요로 하는 사람이 먼저 서둘러 하게 된다는 말", chosung: "ㅁㅁㄹ ㄴㅇ ㅇㅁ ㅍㄷ", keywords: ["급히 필요", "먼저", "서둘러"] },
             { type: "속담", idiom: "못된 송아지 엉덩이에 뿔난다", meaning: "사람답지 못한 사람이 교만하게 굴거나 엇나감을 이르는 말", chosung: "ㅁㄷ ㅅㅇㅈ ㅇㄷㅇㅇ ㅃㄴㄷ", keywords: ["교만", "엇나"] },
-            { type: "속담", idiom: "물이 깊을수록 소리가 없다", meaning: "학식이 깊은 사람일수록 잘난 체하지 않음을 이르는 말", chosung: "ㅁㅇ ㄱㅇㅅㄹ ㅅㄹㄱ ㅇㄷ", keywords: ["학식이 깊", "잘난 체하지 않", "겸손"] },
+            { type: "속담", idiom: "물이 깊을수록 소리가 없다", meaning: "학식이 깊은 사람일수록 잘난 체하지 않음을 이르는 말", chosung: "ㅁㅇ ㄱㅇㅅㄹ ㅅㄹㄱ ㅇㄷ", keywords: ["학식이 깊", "잘난 체하지 않", "겸손"] , aliases: ["벼는 익을수록 고개를 숙인다"] },
             { type: "속담", idiom: "믿는 도끼에 발등 찍힌다", meaning: "믿던 일이 뜻밖에 실패한다는 말", chosung: "ㅁㄴ ㄷㄲㅇ ㅂㄷ ㅉㅎㄷ", keywords: ["믿던", "뜻밖", "실패", "배신"] },
             { type: "속담", idiom: "밑 빠진 독에 물 붓기", meaning: "아무리 애써도 보람이 나타나지 않는 경우에 쓰는 말", chosung: "ㅁ ㅃㅈ ㄷㅇ ㅁ ㅂㄱ", keywords: ["애써도", "보람이 나타나지"] },
             { type: "속담", idiom: "바늘 도둑이 소 도둑 된다", meaning: "작은 나쁜 행실도 자꾸 하면 큰 죄를 저지르게 된다는 뜻", chosung: "ㅂㄴ ㄷㄷㅇ ㅅ ㄷㄷ ㄷㄷ", keywords: ["나쁜 행실", "점점", "큰 죄"] },
@@ -1095,7 +1095,7 @@
             { type: "속담", idiom: "서당 개 삼 년에 풍월을 읊는다", meaning: "무식한 사람도 유식한 사람과 오래 지내면 자연히 견문이 생긴다는 말", chosung: "ㅅㄷ ㄱ ㅅ ㄴㅇ ㅍㅇㅇ ㅇㄴㄷ", keywords: ["오래 지내", "견문", "익"] },
             { type: "속담", idiom: "소문난 잔치에 먹을 것 없다", meaning: "소문난 것이 흔히 실제로는 보잘것없다는 말", chosung: "ㅅㅁㄴ ㅈㅊㅇ ㅁㅇ ㄱ ㅇㄷ", keywords: ["소문난", "실제로는 보잘것없"] },
             { type: "속담", idiom: "수박 겉핥기", meaning: "내용이나 참뜻은 모르면서 대충 일하는 것을 이르는 말", chosung: "ㅅㅂ ㄱㅎㄱ", keywords: ["참뜻은 모르", "대충"] },
-            { type: "속담", idiom: "식은 죽 먹기", meaning: "어떤 일이 아주 하기 쉽다는 말", chosung: "ㅅㅇ ㅈ ㅁㄱ", keywords: ["아주 하기 쉽", "쉬"] },
+            { type: "속담", idiom: "식은 죽 먹기", meaning: "어떤 일이 아주 하기 쉽다는 말", chosung: "ㅅㅇ ㅈ ㅁㄱ", keywords: ["아주 하기 쉽", "쉬"] , aliases: ["누워서 떡 먹기", "땅 짚고 헤엄치기"] },
             { type: "속담", idiom: "십 년이면 강산도 변한다", meaning: "세월이 흐르면 세상에 변하지 않는 것이 없다는 말", chosung: "ㅅ ㄴㅇㅁ ㄱㅅㄷ ㅂㅎㄷ", keywords: ["세월", "변하지 않는 것이 없"] },
             { type: "속담", idiom: "아니 땐 굴뚝에 연기 나랴", meaning: "반드시 원인이 있어야 결과가 생긴다는 뜻", chosung: "ㅇㄴ ㄸ ㄱㄸㅇ ㅇㄱ ㄴㄹ", keywords: ["원인", "결과"] },
             { type: "속담", idiom: "아닌 밤중에 홍두깨", meaning: "예고도 없이 뜻밖의 일이 생겼을 때 하는 말", chosung: "ㅇㄴ ㅂㅈㅇ ㅎㄷㄲ", keywords: ["예고도 없", "뜻밖"] },
@@ -1124,7 +1124,7 @@
             { type: "속담", idiom: "평안 감사도 저 싫으면 그만이다", meaning: "아무리 좋은 일이라도 제가 내키지 않으면 할 수 없다는 말", chosung: "ㅍㅇ ㄱㅅㄷ ㅈ ㅅㅇㅁ ㄱㅁㅇㄷ", keywords: ["좋은 일", "내키지 않", "억지로 못"] },
             { type: "속담", idiom: "피는 물보다 진하다", meaning: "혈육의 정은 다른 어떤 것보다 깊다는 뜻", chosung: "ㅍㄴ ㅁㅂㄷ ㅈㅎㄷ", keywords: ["혈육", "정", "깊"] },
             { type: "속담", idiom: "핑계 없는 무덤 없다", meaning: "무엇을 잘못해 놓고도 여러 이유로 책임을 회피하려는 사람을 이르는 말", chosung: "ㅍㄱ ㅇㄴ ㅁㄷ ㅇㄷ", keywords: ["핑계", "책임을 회피"] },
-            { type: "속담", idiom: "하늘의 별 따기", meaning: "지극히 어려운 일을 이르는 말", chosung: "ㅎㄴㅇ ㅂ ㄸㄱ", keywords: ["지극히 어려운"] },
+            { type: "속담", idiom: "하늘의 별 따기", meaning: "지극히 어려운 일을 이르는 말", chosung: "ㅎㄴㅇ ㅂ ㄸㄱ", keywords: ["지극히 어려운"] , aliases: ["하늘에 별 따기"] },
             { type: "속담", idiom: "하나를 듣고 열을 안다", meaning: "한마디만 듣고도 여러 사실을 미루어 알 정도로 총기가 있다는 말", chosung: "ㅎㄴㄹ ㄷㄱ ㅇㅇ ㅇㄷ", keywords: ["한마디", "미루어 알", "총기"] },
             { type: "속담", idiom: "하늘이 무너져도 솟아날 구멍이 있다", meaning: "아무리 큰 재난에 부딪혀도 벗어날 길은 있다는 뜻", chosung: "ㅎㄴㅇ ㅁㄴㅈㄷ ㅅㅇㄴ ㄱㅁㅇ ㅇㄷ", keywords: ["큰 재난", "벗어날 길"] },
             { type: "속담", idiom: "한 귀로 듣고 한 귀로 흘린다", meaning: "남이 일러 주는 말을 유념하지 않고 건성으로 듣는 것을 이름", chosung: "ㅎ ㄱㄹ ㄷㄱ ㅎ ㄱㄹ ㅎㄹㄷ", keywords: ["유념하지 않", "건성"] },
@@ -1140,7 +1140,7 @@
             { type: "속담", idiom: "굼벵이도 구르는 재주가 있다", meaning: "무능해 보이는 사람도 한 가지 재주는 있다는 말", chosung: "ㄱㅂㅇㄷ ㄱㄹㄴ ㅈㅈㄱ ㅇㄷ", keywords: ["무능", "한 가지 재주"] },
             { type: "속담", idiom: "길고 짧은 것은 대어 보아야 안다", meaning: "잘하고 못함은 실제로 겨루어 보아야 알 수 있다는 말", chosung: "ㄱㄱ ㅉㅇ ㄱㅇ ㄷㅇ ㅂㅇㅇ ㅇㄷ", keywords: ["실제로", "겨루어", "해 봐야"] },
             { type: "속담", idiom: "나무에서 물고기를 찾는다", meaning: "도저히 불가능한 일을 하려고 함을 이르는 말", chosung: "ㄴㅁㅇㅅ ㅁㄱㄱㄹ ㅊㄴㄷ", keywords: ["불가능", "엉뚱", "헛수고"] },
-            { type: "속담", idiom: "누워서 떡 먹기", meaning: "매우 하기 쉬운 일을 이르는 말", chosung: "ㄴㅇㅅ ㄸ ㅁㄱ", keywords: ["매우 쉬", "식은 죽"] },
+            { type: "속담", idiom: "누워서 떡 먹기", meaning: "매우 하기 쉬운 일을 이르는 말", chosung: "ㄴㅇㅅ ㄸ ㅁㄱ", keywords: ["매우 쉬", "식은 죽"] , aliases: ["식은 죽 먹기", "땅 짚고 헤엄치기"] },
             { type: "속담", idiom: "달걀로 바위 치기", meaning: "도저히 이길 수 없는 상대에게 맞서는 어리석음을 이르는 말", chosung: "ㄷㄱㄹ ㅂㅇ ㅊㄱ", keywords: ["이길 수 없", "맞서", "무모"] },
             { type: "속담", idiom: "떡 줄 사람은 생각도 않는데 김칫국부터 마신다", meaning: "상대는 마음도 없는데 미리 다 된 것처럼 기대함을 이르는 말", chosung: "ㄸ ㅈ ㅅㄹㅇ ㅅㄱㄷ ㅇㄴㄷ ㄱㅊㄱㅂㅌ ㅁㅅㄷ", keywords: ["미리", "기대", "김칫국"] },
             { type: "속담", idiom: "말이 씨가 된다", meaning: "늘 말하던 것이 실제로 벌어질 수 있으니 말을 조심하라는 말", chosung: "ㅁㅇ ㅆㄱ ㄷㄷ", keywords: ["말", "실제로", "조심"] },
@@ -1173,14 +1173,14 @@
             { type: "관용어", idiom: "기가 막히다", meaning: "어처구니없거나 너무 놀라다", chosung: "ㄱㄱ ㅁㅎㄷ", keywords: ["어처구니없", "놀라"] },
             { type: "관용어", idiom: "길이 들다", meaning: "어떤 버릇이나 습관에 익숙해지다", chosung: "ㄱㅇ ㄷㄷ", keywords: ["버릇", "습관", "익숙"] },
             { type: "속담", idiom: "꿈보다 해몽이 좋다", meaning: "좋지 않은 일도 그럴듯하게 좋은 쪽으로 해석함을 이르는 말", chosung: "ㄲㅂㄷ ㅎㅁㅇ ㅈㄷ", keywords: ["좋지 않은", "좋게 해석"] },
-            { type: "관용어", idiom: "눈이 빠지도록 기다리다", meaning: "몹시 애타게 오래 기다리다", chosung: "ㄴㅇ ㅃㅈㄷㄹ ㄱㄷㄹㄷ", keywords: ["애타게", "오래", "기다리"] },
+            { type: "관용어", idiom: "눈이 빠지도록 기다리다", meaning: "몹시 애타게 오래 기다리다", chosung: "ㄴㅇ ㅃㅈㄷㄹ ㄱㄷㄹㄷ", keywords: ["애타게", "오래", "기다리"] , aliases: ["목이 빠지다", "목을 빼다"] },
             { type: "관용어", idiom: "다리를 놓다", meaning: "서로 관계를 맺도록 중개하다", chosung: "ㄷㄹㄹ ㄴㄷ", keywords: ["중개", "이어주", "연결"] },
             { type: "관용어", idiom: "뒤를 봐주다", meaning: "뒤에서 남몰래 도와주다", chosung: "ㄷㄹ ㅂㅈㄷ", keywords: ["뒤에서", "도와주"] },
-            { type: "관용어", idiom: "마음을 놓다", meaning: "걱정을 덜고 안심하다", chosung: "ㅁㅇㅇ ㄴㄷ", keywords: ["안심", "걱정을 덜"] },
+            { type: "관용어", idiom: "마음을 놓다", meaning: "걱정을 덜고 안심하다", chosung: "ㅁㅇㅇ ㄴㄷ", keywords: ["안심", "걱정을 덜"] , aliases: ["한시름 놓다"] },
             { type: "관용어", idiom: "마음을 비우다", meaning: "욕심을 버리다", chosung: "ㅁㅇㅇ ㅂㅇㄷ", keywords: ["욕심을 버리"] },
             { type: "관용어", idiom: "마음이 가볍다", meaning: "걱정이 사라져 홀가분하다", chosung: "ㅁㅇㅇ ㄱㅂㄷ", keywords: ["걱정이 사라", "홀가분"] },
             { type: "관용어", idiom: "마음이 무겁다", meaning: "걱정이 많고 괴롭다", chosung: "ㅁㅇㅇ ㅁㄱㄷ", keywords: ["걱정이 많", "괴롭"] },
-            { type: "관용어", idiom: "목을 빼다", meaning: "몹시 간절히 기다리다", chosung: "ㅁㅇ ㅃㄷ", keywords: ["간절히", "기다리"] },
+            { type: "관용어", idiom: "목을 빼다", meaning: "몹시 간절히 기다리다", chosung: "ㅁㅇ ㅃㄷ", keywords: ["간절히", "기다리"] , aliases: ["목이 빠지다", "눈이 빠지도록 기다리다"] },
             { type: "관용어", idiom: "배를 곯다", meaning: "끼니를 제대로 먹지 못하고 굶다", chosung: "ㅂㄹ ㄱㄷ", keywords: ["끼니", "굶", "먹지 못"] },
             { type: "관용어", idiom: "버스를 놓치다", meaning: "좋은 기회나 때를 놓치다", chosung: "ㅂㅅㄹ ㄴㅊㄷ", keywords: ["기회를 놓치", "때를 놓치"] },
             { type: "관용어", idiom: "병이 나다", meaning: "심한 걱정이나 스트레스로 몸이 상하다", chosung: "ㅂㅇ ㄴㄷ", keywords: ["스트레스", "몸이 상", "걱정"] },
@@ -1189,7 +1189,7 @@
             { type: "관용어", idiom: "잔머리를 굴리다", meaning: "얕은 꾀를 부리다", chosung: "ㅈㅁㄹㄹ ㄱㄹㄷ", keywords: ["얕은 꾀", "꾀를 부리"] },
             { type: "관용어", idiom: "잠을 설치다", meaning: "잠을 자다가 자꾸 깨어 제대로 못 자다", chosung: "ㅈㅇ ㅅㅊㄷ", keywords: ["자꾸 깨", "제대로 못 자"] },
             { type: "관용어", idiom: "정을 떼다", meaning: "정이 들었던 마음을 끊다", chosung: "ㅈㅇ ㄸㄷ", keywords: ["정", "마음을 끊"] },
-            { type: "관용어", idiom: "주머니가 가볍다", meaning: "가진 돈이 적거나 없다", chosung: "ㅈㅁㄴㄱ ㄱㅂㄷ", keywords: ["돈이 없", "돈이 적"] },
+            { type: "관용어", idiom: "주머니가 가볍다", meaning: "가진 돈이 적거나 없다", chosung: "ㅈㅁㄴㄱ ㄱㅂㄷ", keywords: ["돈이 없", "돈이 적"] , aliases: ["주머니가 비다"] },
             { type: "관용어", idiom: "찬밥 신세", meaning: "제대로 대우받지 못하는 처지", chosung: "ㅊㅂ ㅅㅅ", keywords: ["대우받지 못", "푸대접"] },
             { type: "관용어", idiom: "코를 찌르다", meaning: "냄새가 매우 강하게 나다", chosung: "ㅋㄹ ㅉㄹㄷ", keywords: ["냄새", "강하"] },
             { type: "관용어", idiom: "파리를 날리다", meaning: "장사가 안되어 손님이 없다", chosung: "ㅍㄹㄹ ㄴㄹㄷ", keywords: ["장사가 안", "손님이 없"] },
@@ -1686,8 +1686,8 @@
             }
         }
 
-        // 정답 유사도 판정: 약 75% 이상 비슷하면 통과 (조사/어미 차이·경미한 오타 허용)
-        const FUZZY_THRESHOLD = 0.75;
+        // 정답 유사도 판정: 약 80% 이상 비슷하면 통과 (조사/어미 차이·경미한 오타 허용)
+        const FUZZY_THRESHOLD = 0.8;
 
         function levenshtein(a, b) {
             const m = a.length, n = b.length;
@@ -1714,6 +1714,12 @@
             return sim >= FUZZY_THRESHOLD;
         }
 
+        // 정답 표현 또는 뜻이 같은 별칭(숨은 데이터) 중 하나라도 비슷하면 정답
+        function isCorrectExpression(input, q) {
+            if (isSimilarAnswer(input, q.idiom)) return true;
+            return Array.isArray(q.aliases) && q.aliases.some(a => isSimilarAnswer(input, a));
+        }
+
         function submitAnswer() {
             if (gameOver) return;
             const q = currentQuestions[currentIndex];
@@ -1723,7 +1729,7 @@
             let isCorrect = false;
 
             if (currentMode === 1 || currentMode === 3) {
-                if (isSimilarAnswer(input, q.idiom)) {
+                if (isCorrectExpression(input, q)) {
                     isCorrect = true;
                 }
             } else if (currentMode === 4) {
