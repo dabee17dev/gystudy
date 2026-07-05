@@ -805,8 +805,8 @@
 
             <!-- 게임 메뉴 (로그인 시에만 노출) — 2x2 카드, 누르면 바로 시작 -->
             <div id="game-menu" class="game-grid" style="display: none;">
-                <button class="game-card" onclick="startFromMenu(1)"><span class="gc-emoji">💡</span><span class="gc-title">뜻 보고 표현</span><span class="gc-sub">주관식</span></button>
-                <button class="game-card" onclick="startFromMenu(4)"><span class="gc-emoji">✍️</span><span class="gc-title">뜻 적기</span><span class="gc-sub">키워드</span></button>
+                <button class="game-card" onclick="startFromMenu(1)"><span class="gc-emoji">💡</span><span class="gc-title">관용 표현 맞추기</span><span class="gc-sub">카드조합</span></button>
+                <button class="game-card" onclick="startFromMenu(4)"><span class="gc-emoji">✍️</span><span class="gc-title">뜻 맞추기</span><span class="gc-sub">카드조합</span></button>
                 <button class="game-card" onclick="startFromMenu(3)"><span class="gc-emoji">🔤</span><span class="gc-title">초성 퀴즈</span><span class="gc-sub">주관식</span></button>
                 <button class="game-card" onclick="startFromMenu(2)"><span class="gc-emoji">📖</span><span class="gc-title">매칭 게임</span><span class="gc-sub">객관식</span></button>
             </div>
@@ -951,7 +951,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.15.0";
+        const APP_VERSION = "1.15.1";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
