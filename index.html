@@ -459,6 +459,25 @@
         .lb-solved { font-weight: 700; color: var(--highlight); flex-shrink: 0; }
         .lb-acc { width: 3.6rem; text-align: right; color: var(--text-dim); font-size: 0.85rem; flex-shrink: 0; }
         .lb-empty { padding: 1.5rem; text-align: center; color: var(--text-dim); font-size: 0.9rem; }
+        .lb-badge {
+            font-size: 0.68rem;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 999px;
+            margin-right: 0.5rem;
+            flex-shrink: 0;
+            color: #fff;
+        }
+        .lb-badge.hard { background: #dc2626; }
+        .lb-badge.easy { background: #2563eb; }
+        .lb-sep {
+            padding: 0.35rem 0.9rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-dim);
+            background: var(--bg-btn);
+            border-bottom: 1px solid var(--border-color);
+        }
 
         /* ---- 반응형 (모바일 / 작은 화면) ---- */
         @media (max-width: 600px) {
@@ -585,18 +604,8 @@
         <div class="container" id="ranking-area" style="height: 55rem; max-height: 90vh; padding: 2.5rem; justify-content: flex-start;">
             <button class="close-btn" onclick="hideRanking()">✕</button>
             <h2 style="font-size: 2rem; margin-bottom: 0.3rem;">🏆 랭킹</h2>
-            <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1.2rem;">같은 조건(모드·난이도·시간)끼리 맞힌 개수로 겨룹니다.</p>
+            <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1.2rem;">모드 상관없이 맞힌 개수로 겨룹니다. <b>어려움</b>이 위, <b>쉬움</b>이 아래.</p>
             <div class="lb-filters">
-                <select id="rank-mode" onchange="loadRanking()">
-                    <option value="1">뜻→표현</option>
-                    <option value="2">표현→뜻(객관식)</option>
-                    <option value="3">초성 퀴즈</option>
-                    <option value="4">뜻 적기</option>
-                </select>
-                <select id="rank-difficulty" onchange="loadRanking()">
-                    <option value="easy">쉬움</option>
-                    <option value="hard">하드</option>
-                </select>
                 <select id="rank-time" onchange="loadRanking()">
                     <option value="60">1분</option>
                     <option value="120">2분</option>
@@ -715,7 +724,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.8.1";
+        const APP_VERSION = "1.9.0";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -1063,34 +1072,45 @@
             } catch (e) { console.warn('[랭킹] 저장 실패:', e.message); return null; }
         }
 
-        // 조건별 리더보드 조회 (맞힌 개수 desc → 정확도 desc → 먼저 달성 우선)
-        async function sbFetchLeaderboard(mode, difficulty, timeLimit, limit = 30) {
+        // 난이도별(모드 무관) 상위 조회 — 같은 제한시간끼리, 맞힌 개수 desc
+        async function sbFetchByDiff(timeLimit, difficulty, limit = 20) {
             if (!SB_ENABLED) return null;
             try {
-                const q = `mode=eq.${mode}&difficulty=eq.${difficulty}&time_limit=eq.${timeLimit}` +
-                          `&select=id,nickname,solved,accuracy,created_at` +
+                const q = `time_limit=eq.${timeLimit}&difficulty=eq.${difficulty}` +
+                          `&select=id,nickname,solved,accuracy,difficulty` +
                           `&order=solved.desc,accuracy.desc,created_at.asc&limit=${limit}`;
                 const res = await fetch(`${SB_URL}/rest/v1/scores?${q}`, { headers: SB_HEADERS });
-                if (!res.ok) throw new Error(`select ${res.status}: ${await res.text()}`);
+                if (!res.ok) throw new Error(`select ${res.status}`);
                 return await res.json();
             } catch (e) { console.warn('[랭킹] 조회 실패:', e.message); return null; }
         }
 
-        // 리더보드 렌더 (rows 없으면 안내). highlightId와 일치하는 행 강조
-        function renderLeaderboard(container, rows, highlightId) {
+        // 어려움(상위) + 쉬움(하위) 통합 조회 → { hard:[...], easy:[...] } (실패 시 null)
+        async function sbFetchCombined(timeLimit, perDiff = 20) {
+            if (!SB_ENABLED) return null;
+            const [hard, easy] = await Promise.all([
+                sbFetchByDiff(timeLimit, 'hard', perDiff),
+                sbFetchByDiff(timeLimit, 'easy', perDiff)
+            ]);
+            if (hard === null && easy === null) return null;
+            return { hard: hard || [], easy: easy || [] };
+        }
+
+        // 통합 리더보드 렌더: 어려움 → 쉬움, 각 줄에 난이도 배지, highlightId 강조
+        function renderCombinedBoard(container, data, highlightId) {
             if (!SB_ENABLED) {
                 container.innerHTML = '<div class="lb-empty">랭킹 서버가 설정되지 않았습니다.<br>(.env.local 확인)</div>';
                 return;
             }
-            if (rows === null) {
+            if (data === null) {
                 container.innerHTML = '<div class="lb-empty">랭킹을 불러오지 못했습니다.<br>네트워크나 테이블 설정을 확인하세요.</div>';
                 return;
             }
-            if (rows.length === 0) {
+            if (data.hard.length === 0 && data.easy.length === 0) {
                 container.innerHTML = '<div class="lb-empty">아직 기록이 없어요. 첫 기록의 주인공이 되어보세요! 🎉</div>';
                 return;
             }
-            container.innerHTML = rows.map((r, i) => {
+            const section = (rows, diff, label) => rows.map((r, i) => {
                 const rank = i + 1;
                 const medal = rank <= 3 ? ' medal' : '';
                 const mark = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
@@ -1099,11 +1119,17 @@
                 const nick = escapeHtml(r.nickname);
                 return `<div class="lb-row${me}">
                     <div class="lb-rank${medal}">${mark}</div>
+                    <span class="lb-badge ${diff}">${label}</span>
                     <div class="lb-name">${nick}</div>
                     <div class="lb-solved">${r.solved}개</div>
                     <div class="lb-acc">${acc}</div>
                 </div>`;
             }).join('');
+
+            let html = section(data.hard, 'hard', '어려움');
+            if (data.hard.length && data.easy.length) html += '<div class="lb-sep">─ 쉬움 ─</div>';
+            html += section(data.easy, 'easy', '쉬움');
+            container.innerHTML = html;
         }
 
         // 닉네임 등 사용자 입력이 innerHTML에 들어갈 때 XSS 방지용 이스케이프
@@ -1586,15 +1612,18 @@
                 solved: score, attempted: answered, accuracy
             });
 
-            const rows = await sbFetchLeaderboard(cond.mode, cond.difficulty, cond.time_limit);
+            // 모드 무관, 어려움(상위)+쉬움(하위) 통합 보드 (이번 판 시간대)
+            const data = await sbFetchCombined(totalTime);
             const myId = saved ? saved.id : null;
-            renderLeaderboard(board, rows, myId);
+            renderCombinedBoard(board, data, myId);
 
-            if (rows && myId != null) {
-                const rank = rows.findIndex(r => r.id === myId);
+            const diffLabel = difficulty === 'hard' ? '어려움' : '쉬움';
+            if (data && myId != null) {
+                const myList = difficulty === 'hard' ? data.hard : data.easy;
+                const rank = myList.findIndex(r => r.id === myId);
                 status.innerText = rank >= 0
-                    ? `내 순위: ${rank + 1}위 / ${rows.length}명 (상위 30 기준)`
-                    : `기록 저장됨 · 상위 30위권 밖`;
+                    ? `내 순위: ${diffLabel} ${rank + 1}위 / ${myList.length}명 (상위 20 기준)`
+                    : `기록 저장됨 · ${diffLabel} 상위 20위권 밖`;
             } else if (!saved) {
                 status.innerText = '⚠️ 기록 저장 실패 (아래 목록만 표시)';
             } else {
@@ -1619,12 +1648,10 @@
 
         async function loadRanking() {
             const list = document.getElementById('ranking-list');
-            const mode = parseInt(document.getElementById('rank-mode').value);
-            const diff = document.getElementById('rank-difficulty').value;
             const time = parseInt(document.getElementById('rank-time').value);
             list.innerHTML = '<div class="lb-empty">불러오는 중…</div>';
-            const rows = await sbFetchLeaderboard(mode, diff, time);
-            renderLeaderboard(list, rows, null);
+            const data = await sbFetchCombined(time);
+            renderCombinedBoard(list, data, null);
         }
 
         // ---- 초기화 ----
