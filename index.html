@@ -444,9 +444,31 @@
                 font-size: 0.8rem;
             }
 
-            /* 도감 행: 좁은 화면에서 단어/뜻 세로 배치 */
-            .dict-col-word { width: 42%; }
-            .dict-divider { margin: 0 0.5rem; }
+            /* 도감 행: 좁은 화면에서 표현(위) / 뜻(아래) 세로 배치 */
+            .dict-row {
+                flex-wrap: wrap;
+                align-items: baseline;
+                padding: 0.85rem 0.9rem;
+            }
+            .dict-col-index {
+                width: 1.6rem;
+                text-align: left;
+                font-size: 0.85rem;
+            }
+            .dict-col-word {
+                width: auto;
+                flex: 1 1 auto;
+                padding-right: 0;
+                font-size: 1rem;
+            }
+            .dict-divider { display: none; }
+            .dict-col-meaning {
+                flex-basis: 100%;
+                width: 100%;
+                margin-top: 0.35rem;
+                padding-left: 1.6rem; /* 번호 폭만큼 들여써 표현과 정렬 */
+                font-size: 0.9rem;
+            }
         }
 
     </style>
@@ -592,7 +614,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.5.0";
+        const APP_VERSION = "1.5.1";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
