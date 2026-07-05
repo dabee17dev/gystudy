@@ -241,6 +241,38 @@
 
         /* Settings Button */
         /* 카드 내 푸터 (설정 · 제작자 · 버전) */
+        /* 메인 상단바: 제목(좌) + 플레이어 정보(우) */
+        .menu-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+        .menu-topbar h1 { margin-bottom: 0; }
+        #player-box {
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+        .logout-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.3rem;
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .logout-btn:hover { color: #dc2626; border-color: #dc2626; }
+
         .menu-footer {
             display: flex;
             align-items: center;
@@ -620,6 +652,8 @@
         @media (max-width: 600px) {
             html { font-size: 15px; }
             h1 { font-size: 2rem; }
+            .menu-topbar h1 { font-size: 1.4rem; }
+            #player-box { font-size: 0.8rem; }
             .container { padding: 1.75rem 1.25rem; }
             .dict-container { padding: 1.25rem; }
             #settings-area { padding: 1.75rem 1.25rem !important; }
@@ -709,20 +743,23 @@
     <div id="app">
         <!-- Main Menu -->
         <div class="container" id="main-menu" style="justify-content: flex-start;">
-            <h1>관용표현 & 속담 퀴즈</h1>
+            <div class="menu-topbar">
+                <h1>관용표현 & 속담 퀴즈</h1>
+                <!-- 플레이어 정보 (로그인 상태) — 제목 오른쪽 -->
+                <div id="player-box" style="display: none;">
+                    <span>👤 <b id="player-name"></b>님</span>
+                    <button class="logout-btn" onclick="logout()" title="로그아웃" aria-label="로그아웃">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    </button>
+                </div>
+            </div>
             <p style="margin-bottom: 1.5rem; color: var(--text-dim);">재미있게 배우는 우리말 관용표현과 속담!</p>
 
             <!-- 로그인/가입 (로그아웃 상태) -->
             <div id="login-box" style="margin-bottom: 1rem;">
-                <input type="text" id="login-nickname" class="input-box" maxlength="12" placeholder="이름 (같은 이름이면 로그인)" style="margin: 0 0 0.5rem 0;" onkeypress="if(event.key==='Enter') login()">
+                <input type="text" id="login-nickname" class="input-box" maxlength="4" placeholder="이름 (최대 4글자, 같은 이름이면 로그인)" style="margin: 0 0 0.5rem 0;" onkeypress="if(event.key==='Enter') login()">
                 <button class="menu-btn" style="background: var(--highlight); color: #fff; border: none; font-weight: bold; margin: 0;" onclick="login()">로그인 / 가입</button>
                 <div id="login-msg" style="min-height: 1.2rem; margin-top: 0.5rem; font-size: 0.9rem;"></div>
-            </div>
-
-            <!-- 플레이어 정보 (로그인 상태) -->
-            <div id="player-box" style="display: none; align-items: center; justify-content: center; gap: 0.75rem; margin-bottom: 1rem; font-size: 1.1rem;">
-                <span>👤 <b id="player-name"></b>님</span>
-                <button class="action-btn" style="width: auto; padding: 0.4rem 1rem; margin: 0; font-size: 0.9rem;" onclick="logout()">로그아웃</button>
             </div>
 
             <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
@@ -871,7 +908,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.14.0";
+        const APP_VERSION = "1.14.1";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -1319,7 +1356,7 @@
         async function login() {
             const input = document.getElementById('login-nickname');
             const msg = document.getElementById('login-msg');
-            const nick = input.value.trim().replace(/\s+/g, ' ').slice(0, 12);
+            const nick = input.value.trim().replace(/\s+/g, ' ').slice(0, 4);
             if (!nick) { msg.style.color = '#dc2626'; msg.innerText = '이름을 입력하세요.'; return; }
 
             msg.style.color = 'var(--text-dim)';
