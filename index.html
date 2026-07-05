@@ -550,22 +550,12 @@
             </div>
 
             <div style="text-align: left; margin-bottom: 1.5rem;">
-                <label style="font-weight: bold; display: block; margin-bottom: 0.5rem;">⏳ 제한시간 (문제당)</label>
+                <label style="font-weight: bold; display: block; margin-bottom: 0.5rem;">⏱️ 제한시간 (전체) <span style="font-weight: normal; color: var(--text-dim);">시간 내 최대한 많이!</span></label>
                 <select id="setup-time" class="input-box" style="margin: 0; cursor: pointer;">
-                    <option value="0">무제한</option>
-                    <option value="5">5초</option>
-                    <option value="10" selected>10초</option>
-                    <option value="15">15초</option>
-                </select>
-            </div>
-
-            <div style="text-align: left; margin-bottom: 1.5rem;">
-                <label style="font-weight: bold; display: block; margin-bottom: 0.5rem;">🎯 문제 수 (라운드)</label>
-                <select id="setup-rounds" class="input-box" style="margin: 0; cursor: pointer;">
-                    <option value="5" selected>5문제</option>
-                    <option value="10">10문제</option>
-                    <option value="15">15문제</option>
-                    <option value="all">전체 다 풀기</option>
+                    <option value="60">1분</option>
+                    <option value="120" selected>2분</option>
+                    <option value="180">3분</option>
+                    <option value="300">5분</option>
                 </select>
             </div>
 
@@ -584,9 +574,9 @@
         <div class="container" id="game-area">
             <button class="close-btn" title="게임 종료" onclick="goHome()">✖</button>
             <div class="header">
-                <span id="score-display">점수: 0</span>
-                <span id="timer-display" style="font-weight: bold; color: #ef4444; font-size: 1.2rem; display: none;">남은 시간: <span id="time-left">10</span>초</span>
-                <span id="progress-display">1 / 5</span>
+                <span id="score-display">맞힘: 0</span>
+                <span id="timer-display" style="font-weight: bold; color: #ef4444; font-size: 1.2rem;">⏱️ <span id="time-left">0:00</span></span>
+                <span id="progress-display">문제 1</span>
             </div>
             <div id="question-text" class="question">질문 내용</div>
             
@@ -608,7 +598,7 @@
         <!-- Result Area -->
         <div class="container" id="result-area">
             <h1>게임 종료!</h1>
-            <p id="final-score" style="font-size: 1.5rem; margin-bottom: 2rem;"></p>
+            <p id="final-score" style="font-size: 1.5rem; margin-bottom: 2rem; white-space: pre-line; line-height: 1.5;"></p>
             <button class="action-btn" onclick="goHome()">메인으로 돌아가기</button>
         </div>
     </div>
@@ -616,7 +606,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.5.2";
+        const APP_VERSION = "2.0.0";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -1077,10 +1067,11 @@
         
         // 추가된 상태 변수들
         let playerNickname = "플레이어";
-        let timeLimit = 0;
-        let totalRounds = 5;
+        let totalTime = 120;     // 전체 제한시간(초)
         let timerInterval = null;
         let timeRemaining = 0;
+        let answered = 0;        // 시도한 문제 수
+        let gameOver = false;
         let setupMode = 1;
         let difficulty = 'easy'; // 'easy' | 'hard' — 모드4('뜻 적기') 채점 엄격도
 
@@ -1117,9 +1108,7 @@
         function executeGameStart() {
             const nickInput = document.getElementById('setup-nickname').value.trim();
             playerNickname = nickInput ? nickInput : "플레이어";
-            timeLimit = parseInt(document.getElementById('setup-time').value);
-            const roundInput = document.getElementById('setup-rounds').value;
-            totalRounds = roundInput === 'all' ? DB.length : parseInt(roundInput);
+            totalTime = parseInt(document.getElementById('setup-time').value);
             difficulty = document.getElementById('setup-difficulty').value;
 
             document.getElementById('setup-area').style.display = 'none';
@@ -1130,38 +1119,43 @@
             currentMode = mode;
             score = 0;
             currentIndex = 0;
-            
-            let maxAvailable = Math.min(totalRounds, DB.length);
-            currentQuestions = shuffle([...DB]).slice(0, maxAvailable);
-            totalRounds = currentQuestions.length; // 실제 문제 수로 업데이트
-            
+            answered = 0;
+            gameOver = false;
+
+            // 전체를 섞어 제한시간 동안 최대한 많이 풀도록
+            currentQuestions = shuffle([...DB]);
+
             document.getElementById('game-area').style.display = 'flex';
             document.getElementById('game-area').style.flexDirection = 'column';
-            
+
+            startGameTimer();
             loadQuestion();
         }
 
-        function startTimer() {
-            stopTimer(); // 기존 타이머 클리어
-            if (timeLimit > 0) {
-                timeRemaining = timeLimit;
-                const timerDisplay = document.getElementById('timer-display');
-                const timeLeftSpan = document.getElementById('time-left');
-                
-                timerDisplay.style.display = 'inline';
-                timeLeftSpan.innerText = timeRemaining;
-                
-                timerInterval = setInterval(() => {
-                    timeRemaining--;
-                    timeLeftSpan.innerText = timeRemaining;
-                    if (timeRemaining <= 0) {
-                        stopTimer();
-                        showFeedback(false, true); // 시간 초과로 오답 처리
-                    }
-                }, 1000);
-            } else {
-                document.getElementById('timer-display').style.display = 'none';
-            }
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60), s = sec % 60;
+            return `${m}:${String(s).padStart(2, '0')}`;
+        }
+
+        function updateTimerDisplay() {
+            const span = document.getElementById('time-left');
+            span.innerText = formatTime(Math.max(0, timeRemaining));
+            // 10초 이하 강조
+            document.getElementById('timer-display').style.color = timeRemaining <= 10 ? '#dc2626' : '#ef4444';
+        }
+
+        // 전체 제한시간 카운트다운 (문제 넘어가도 계속 흐름)
+        function startGameTimer() {
+            stopTimer();
+            timeRemaining = totalTime;
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                updateTimerDisplay();
+                if (timeRemaining <= 0) {
+                    endGame();
+                }
+            }, 1000);
         }
 
         function stopTimer() {
@@ -1175,8 +1169,8 @@
             document.getElementById('feedback-text').innerText = '';
             document.getElementById('info-text').innerText = '';
             document.getElementById('next-btn').style.display = 'none';
-            document.getElementById('score-display').innerText = `점수: ${Math.round(score)}`;
-            document.getElementById('progress-display').innerText = `${currentIndex + 1} / ${currentQuestions.length}`;
+            document.getElementById('score-display').innerText = `맞힘: ${score}`;
+            document.getElementById('progress-display').innerText = `문제 ${currentIndex + 1}`;
             
             const q = currentQuestions[currentIndex];
             const qText = document.getElementById('question-text');
@@ -1221,11 +1215,10 @@
                 inputSec.style.display = 'block';
                 inputField.focus();
             }
-            
-            startTimer();
         }
 
         function submitAnswer() {
+            if (gameOver) return;
             const q = currentQuestions[currentIndex];
             const input = document.getElementById('answer-input').value.trim();
             if (!input) return;
@@ -1249,27 +1242,25 @@
         }
 
         function checkOption(selected, correct) {
+            if (gameOver) return;
             showFeedback(selected === correct);
         }
 
-        function showFeedback(isCorrect, isTimeOut = false) {
-            stopTimer(); // 피드백 표시 시 타이머 정지
+        function showFeedback(isCorrect) {
+            // 전체 타이머는 계속 흐름 (정지하지 않음)
+            answered++;
             const feedback = document.getElementById('feedback-text');
             const info = document.getElementById('info-text');
             const q = currentQuestions[currentIndex];
             const exactMeaning = q.meaning;
-            
+
             if (isCorrect) {
-                score += (100 / totalRounds); // 총 문항 수에 비례한 점수
-                document.getElementById('score-display').innerText = `점수: ${Math.round(score)}`;
+                score += 1; // 맞힌 문제 수
+                document.getElementById('score-display').innerText = `맞힘: ${score}`;
                 feedback.innerText = '정답입니다! 🎉';
                 feedback.className = 'feedback correct';
             } else {
-                if (isTimeOut) {
-                    feedback.innerText = '시간 초과! ⏳';
-                } else {
-                    feedback.innerText = '틀렸습니다! 😢';
-                }
+                feedback.innerText = '틀렸습니다! 😢';
                 feedback.className = 'feedback incorrect';
             }
 
@@ -1288,19 +1279,28 @@
         }
 
         function nextQuestion() {
+            if (gameOver) return;
             currentIndex++;
             if (currentIndex < currentQuestions.length) {
                 loadQuestion();
             } else {
-                showResult();
+                endGame(); // 모든 문제를 다 풂
             }
+        }
+
+        function endGame() {
+            if (gameOver) return;
+            gameOver = true;
+            stopTimer();
+            showResult();
         }
 
         function showResult() {
             document.getElementById('game-area').style.display = 'none';
             document.getElementById('result-area').style.display = 'flex';
             document.getElementById('result-area').style.flexDirection = 'column';
-            document.getElementById('final-score').innerText = `${playerNickname}님의 최종 점수: ${Math.round(score)}점 / 100점`;
+            document.getElementById('final-score').innerText =
+                `${playerNickname}님이 ${formatTime(totalTime)} 동안\n맞힌 문제: ${score}개  (시도 ${answered}개)`;
         }
 
         // ---- 초기화 ----
