@@ -23,11 +23,11 @@ create table if not exists public.scores (
     mode        int         not null,            -- 1~4 퀴즈 모드
     difficulty  text        not null,            -- 'easy' | 'hard'
     time_limit  int         not null,            -- 60/120/180/300 (초)
-    solved      int         not null,            -- 맞힌 개수 (랭킹 기준)
+    solved      int         not null,            -- 획득 점수 (문제당 최대 10점, 힌트 사용 시 5점)
     attempted   int         not null,            -- 시도 개수
-    accuracy    real,                            -- solved/attempted (0~1)
+    accuracy    real,                            -- 정답률(0~1), 점수와 별개로 계산됨
     created_at  timestamptz not null default now(),
-    constraint scores_solved_chk    check (solved >= 0 and attempted >= solved),
+    constraint scores_solved_chk    check (solved >= 0 and solved <= attempted * 10),
     constraint scores_difficulty_chk check (difficulty in ('easy','hard')),
     constraint scores_time_chk      check (time_limit in (60,120,180,300)),
     constraint scores_nick_chk      check (char_length(nickname) between 1 and 12)
@@ -56,3 +56,9 @@ create policy "public insert scores"
 --       필요하면 아래 주석을 해제하세요. (권장하지 않음)
 -- create policy "public update scores" on public.scores for update using (true) with check (true);
 -- create policy "public delete scores" on public.scores for delete using (true);
+
+-- 4) 마이그레이션: 기존 테이블이 이미 있다면(solved=정답 개수 시절 제약) 아래를 실행해
+--    solved(=점수, 문제당 최대 10점)에 맞게 제약을 갱신하세요.
+alter table public.scores drop constraint if exists scores_solved_chk;
+alter table public.scores add constraint scores_solved_chk
+    check (solved >= 0 and solved <= attempted * 10);

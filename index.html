@@ -668,6 +668,35 @@
             border-bottom: 1px solid var(--border-color);
         }
 
+        /* 초성 퀴즈 힌트 */
+        #hint-row {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.4rem;
+            margin: 0.75rem 0;
+        }
+        .hint-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d97706;
+            border-radius: 8px;
+            background: transparent;
+            color: #d97706;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .hint-btn:hover { background: #d97706; color: #fff; }
+        .hint-btn:disabled { opacity: 0.5; cursor: default; background: transparent; color: #d97706; }
+        .hint-text {
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            color: var(--highlight);
+            min-height: 1.5rem;
+        }
+
         /* ---- 반응형 (모바일 / 작은 화면) ---- */
         /* 카드가 화면을 꽉 채우도록 (세로 좁은 폭 OR 가로 낮은 높이) */
         @media (max-width: 600px), (max-height: 500px) {
@@ -815,7 +844,7 @@
                 <button class="game-card" onclick="startFromMenu(1)"><span class="gc-emoji">💡</span><span class="gc-title">관용 표현 맞추기</span><span class="gc-sub">카드조합</span></button>
                 <button class="game-card" onclick="startFromMenu(4)"><span class="gc-emoji">✍️</span><span class="gc-title">뜻 맞추기</span><span class="gc-sub">카드조합</span></button>
                 <button class="game-card" onclick="startFromMenu(3)"><span class="gc-emoji">🔤</span><span class="gc-title">초성 퀴즈</span><span class="gc-sub">주관식</span></button>
-                <button class="game-card" onclick="startFromMenu(2)"><span class="gc-emoji">📖</span><span class="gc-title">매칭 게임</span><span class="gc-sub">객관식</span></button>
+                <button class="game-card" onclick="startFromMenu(2)"><span class="gc-emoji">📖</span><span class="gc-title">매칭 게임</span><span class="gc-sub">객관식 · 쉬움</span></button>
             </div>
 
             <!-- 시간 · 난이도 선택 (게임 시작 시 적용) -->
@@ -925,6 +954,10 @@
             
             <div id="input-section" style="display: none;">
                 <input type="text" id="answer-input" class="input-box" placeholder="정답을 입력하세요" onkeypress="if(event.key === 'Enter') submitAnswer()">
+                <div id="hint-row" style="display: none;">
+                    <button class="hint-btn" id="hint-btn" onclick="useHint()">💡 힌트 (정답 점수 50%)</button>
+                    <div id="hint-text" class="hint-text"></div>
+                </div>
                 <button class="action-btn" onclick="submitAnswer()">확인</button>
             </div>
             
@@ -958,7 +991,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.18.0";
+        const APP_VERSION = "1.19.0";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -1365,7 +1398,7 @@
                     <div class="lb-rank${medal}">${mark}</div>
                     <span class="lb-badge ${diff}">${label}</span>
                     <div class="lb-name">${nick}</div>
-                    <div class="lb-solved">${r.solved * 10}점</div>
+                    <div class="lb-solved">${r.solved}점</div>
                     <div class="lb-acc">${acc}</div>
                 </div>`;
             }).join('');
@@ -1606,11 +1639,13 @@
         let timerInterval = null;
         let timeRemaining = 0;
         let answered = 0;        // 시도한 문제 수
+        let correctCount = 0;    // 맞힌 문제 수 (정확도 계산용, score와 별개)
         let gameOver = false;
         let setupMode = 1;
-        let difficulty = 'easy'; // 'easy' | 'hard' — 모드4('뜻 적기') 채점 엄격도
+        let difficulty = 'easy'; // 'easy' | 'hard' — 모드1/4 카드조합 난이도
         let menuTime = 60;       // 메인에서 선택한 제한시간(초)
         let menuDiff = 'easy';   // 메인에서 선택한 난이도
+        let hintUsed = false;    // 초성 퀴즈: 현재 문제에서 힌트 사용 여부
 
         function shuffle(array) {
             let currentIndex = array.length,  randomIndex;
@@ -1650,7 +1685,8 @@
             setupMode = mode;
             playerNickname = currentPlayer;
             totalTime = menuTime;
-            difficulty = menuDiff;
+            // 매칭 게임(모드2)은 난이도 구분이 없어 항상 쉬움으로 진행
+            difficulty = (mode === 2) ? 'easy' : menuDiff;
             document.getElementById('main-menu').style.display = 'none';
             document.getElementById('global-settings-btn').style.display = 'none';
             runCountdown(() => startGame(mode));
@@ -1684,6 +1720,7 @@
         function startGame(mode) {
             currentMode = mode;
             score = 0;
+            correctCount = 0;
             currentIndex = 0;
             answered = 0;
             gameOver = false;
@@ -1735,9 +1772,15 @@
             document.getElementById('feedback-text').innerText = '';
             document.getElementById('info-text').innerText = '';
             document.getElementById('next-btn').style.display = 'none';
-            document.getElementById('score-display').innerText = `점수: ${score * 10}`;
+            document.getElementById('score-display').innerText = `점수: ${score}`;
             document.getElementById('progress-display').innerText = `문제 ${currentIndex + 1}`;
-            
+
+            // 힌트 상태 초기화 (문제마다)
+            hintUsed = false;
+            document.getElementById('hint-row').style.display = currentMode === 3 ? 'flex' : 'none';
+            document.getElementById('hint-btn').disabled = false;
+            document.getElementById('hint-text').innerText = '';
+
             const q = currentQuestions[currentIndex];
             const qText = document.getElementById('question-text');
             const inputSec = document.getElementById('input-section');
@@ -1787,9 +1830,27 @@
         let arrangeBank = [];    // 남은 조각 [{id, text}]
         let arrangeAnswer = [];  // 배치된 조각 [{id, text}]
 
+        // 단어를 1~3개씩 묶은 연속 청크로 분할 (원래 순서 유지)
+        function chunkWordsRandom(words, minSize, maxSize) {
+            const chunks = [];
+            let i = 0;
+            while (i < words.length) {
+                const remaining = words.length - i;
+                const maxTake = Math.min(maxSize, remaining);
+                const size = maxTake <= minSize ? maxTake : minSize + Math.floor(Math.random() * (maxTake - minSize + 1));
+                chunks.push(words.slice(i, i + size));
+                i += size;
+            }
+            return chunks;
+        }
+
         function setupArrange(target) {
             arrangeWords = String(target).split(/\s+/).filter(Boolean);
-            const pieces = arrangeWords.map((w, i) => ({ id: i, text: w }));
+            // 쉬움: 카드 수를 줄이기 위해 1~3단어씩 묶음, 하드: 단어 1개당 카드 1개(기존 방식)
+            const chunks = (difficulty === 'easy' && arrangeWords.length > 1)
+                ? chunkWordsRandom(arrangeWords, 1, 3)
+                : arrangeWords.map(w => [w]);
+            const pieces = chunks.map((c, i) => ({ id: i, text: c.join(' ') }));
             // 원래 순서와 다르게 섞기 (조각 2개 이상일 때)
             do { arrangeBank = shuffle([...pieces]); }
             while (pieces.length > 1 && arrangeBank.map(p => p.text).join(' ') === arrangeWords.join(' '));
@@ -1865,6 +1926,31 @@
             return Array.isArray(q.aliases) && q.aliases.some(a => isSimilarAnswer(input, a));
         }
 
+        // 초성 퀴즈 힌트: 공백 제외 글자의 약 50%를 노출 (사용 시 이번 문제 점수 절반)
+        function useHint() {
+            if (gameOver || hintUsed) return;
+            const q = currentQuestions[currentIndex];
+            if (!q) return;
+            hintUsed = true;
+            document.getElementById('hint-btn').disabled = true;
+
+            const chars = q.idiom.split('');
+            const nonSpaceCount = chars.filter(c => c !== ' ').length;
+            const revealCount = Math.ceil(nonSpaceCount / 2);
+            let revealed = 0;
+            const masked = chars.map((c, i) => {
+                if (c === ' ') return ' ';
+                // 앞쪽부터 짝수 인덱스 우선으로 고르게 절반 노출
+                if (revealed < revealCount && i % 2 === 0) { revealed++; return c; }
+                return '_';
+            });
+            // 목표치를 못 채웠으면 남은 글자에서 마저 채움
+            for (let i = 0; i < masked.length && revealed < revealCount; i++) {
+                if (masked[i] === '_') { masked[i] = chars[i]; revealed++; }
+            }
+            document.getElementById('hint-text').innerText = masked.join('');
+        }
+
         function submitAnswer() {
             if (gameOver) return;
             const q = currentQuestions[currentIndex];
@@ -1906,10 +1992,14 @@
             const exactMeaning = q.meaning;
 
             if (isCorrect) {
-                score += 1; // 맞힌 문제 수
-                document.getElementById('score-display').innerText = `점수: ${score * 10}`;
+                correctCount++;
+                // 기본 10점, 초성 퀴즈에서 힌트를 사용했으면 이번 문제는 50% 감소(5점)
+                const gained = (currentMode === 3 && hintUsed) ? 5 : 10;
+                score += gained;
+                document.getElementById('score-display').innerText = `점수: ${score}`;
                 feedback.innerHTML = '정답입니다! 🎉' +
-                    (approx ? '<div class="feedback-note">(비슷한 의미 입력 정답 인정)</div>' : '');
+                    (approx ? '<div class="feedback-note">(비슷한 의미 입력 정답 인정)</div>' : '') +
+                    ((currentMode === 3 && hintUsed) ? '<div class="feedback-note">(힌트 사용으로 점수 50% 감소)</div>' : '');
                 feedback.className = 'feedback correct';
             } else {
                 feedback.innerText = '틀렸습니다! 😢';
@@ -1953,7 +2043,7 @@
             document.getElementById('result-area').style.display = 'flex';
             document.getElementById('result-area').style.flexDirection = 'column';
             document.getElementById('final-score').innerText =
-                `${playerNickname}님이 ${formatTime(totalTime)} 동안\n획득 점수: ${score * 10}점  (시도 ${answered}개)`;
+                `${playerNickname}님이 ${formatTime(totalTime)} 동안\n획득 점수: ${score}점  (시도 ${answered}개)`;
 
             const status = document.getElementById('result-rank-status');
             const board = document.getElementById('result-leaderboard');
@@ -1969,7 +2059,7 @@
             status.innerText = '기록 저장 중…';
             board.innerHTML = '<div class="lb-empty">불러오는 중…</div>';
 
-            const accuracy = answered > 0 ? Math.round((score / answered) * 1000) / 1000 : 0;
+            const accuracy = answered > 0 ? Math.round((correctCount / answered) * 1000) / 1000 : 0;
             const saved = await sbInsertScore({
                 nickname: playerNickname, ...cond,
                 solved: score, attempted: answered, accuracy
