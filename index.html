@@ -911,7 +911,7 @@
             <button class="close-btn" title="게임 종료" onclick="goHome()">✖</button>
             <div class="header">
                 <span id="timer-display" style="font-weight: bold; color: #ef4444; font-size: 1.2rem;">⏱️ <span id="time-left">0:00</span></span>
-                <span id="score-display">맞힘: 0</span>
+                <span id="score-display">점수: 0</span>
                 <span id="progress-display">문제 1</span>
             </div>
             <div id="question-text" class="question">질문 내용</div>
@@ -951,7 +951,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.16.0";
+        const APP_VERSION = "1.16.1";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -1358,7 +1358,7 @@
                     <div class="lb-rank${medal}">${mark}</div>
                     <span class="lb-badge ${diff}">${label}</span>
                     <div class="lb-name">${nick}</div>
-                    <div class="lb-solved">${r.solved}개</div>
+                    <div class="lb-solved">${r.solved * 10}점</div>
                     <div class="lb-acc">${acc}</div>
                 </div>`;
             }).join('');
@@ -1728,7 +1728,7 @@
             document.getElementById('feedback-text').innerText = '';
             document.getElementById('info-text').innerText = '';
             document.getElementById('next-btn').style.display = 'none';
-            document.getElementById('score-display').innerText = `맞힘: ${score}`;
+            document.getElementById('score-display').innerText = `점수: ${score * 10}`;
             document.getElementById('progress-display').innerText = `문제 ${currentIndex + 1}`;
             
             const q = currentQuestions[currentIndex];
@@ -1900,7 +1900,7 @@
 
             if (isCorrect) {
                 score += 1; // 맞힌 문제 수
-                document.getElementById('score-display').innerText = `맞힘: ${score}`;
+                document.getElementById('score-display').innerText = `점수: ${score * 10}`;
                 feedback.innerHTML = '정답입니다! 🎉' +
                     (approx ? '<div class="feedback-note">(비슷한 의미 입력 정답 인정)</div>' : '');
                 feedback.className = 'feedback correct';
@@ -1946,7 +1946,7 @@
             document.getElementById('result-area').style.display = 'flex';
             document.getElementById('result-area').style.flexDirection = 'column';
             document.getElementById('final-score').innerText =
-                `${playerNickname}님이 ${formatTime(totalTime)} 동안\n맞힌 문제: ${score}개  (시도 ${answered}개)`;
+                `${playerNickname}님이 ${formatTime(totalTime)} 동안\n획득 점수: ${score * 10}점  (시도 ${answered}개)`;
 
             const status = document.getElementById('result-rank-status');
             const board = document.getElementById('result-leaderboard');
