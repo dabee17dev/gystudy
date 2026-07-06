@@ -22,20 +22,20 @@ create table if not exists public.scores (
     nickname    text        not null,
     mode        int         not null,            -- 1~4 퀴즈 모드
     difficulty  text        not null,            -- 'easy' | 'hard'
-    time_limit  int         not null,            -- 60/120/180/300 (초)
+    time_limit  int         not null,            -- 제한시간(초). 현재 앱은 100초로 고정, 과거값(60/120)도 허용
     solved      int         not null,            -- 획득 점수 (문제당 최대 10점, 힌트 사용 시 5점)
     attempted   int         not null,            -- 시도 개수
     accuracy    real,                            -- 정답률(0~1), 점수와 별개로 계산됨
     created_at  timestamptz not null default now(),
     constraint scores_solved_chk    check (solved >= 0 and solved <= attempted * 10),
     constraint scores_difficulty_chk check (difficulty in ('easy','hard')),
-    constraint scores_time_chk      check (time_limit in (60,120,180,300)),
+    constraint scores_time_chk      check (time_limit > 0),
     constraint scores_nick_chk      check (char_length(nickname) between 1 and 12)
 );
 
--- 2) 리더보드 조회 최적화 인덱스 (같은 조건끼리 비교)
+-- 2) 리더보드 조회 최적화 인덱스 (게임(mode)·난이도별로 비교, 시간은 더 이상 랭킹 구분에 쓰이지 않음)
 create index if not exists idx_scores_leaderboard
-    on public.scores (mode, difficulty, time_limit, solved desc, accuracy desc, created_at asc);
+    on public.scores (mode, difficulty, solved desc, accuracy desc, created_at asc);
 
 -- 3) RLS: 누구나 읽기/쓰기(삽입) 가능
 alter table public.scores enable row level security;
@@ -62,3 +62,13 @@ create policy "public insert scores"
 alter table public.scores drop constraint if exists scores_solved_chk;
 alter table public.scores add constraint scores_solved_chk
     check (solved >= 0 and solved <= attempted * 10);
+
+-- 5) 마이그레이션: 제한시간을 100초로 고정하며 time_limit 제약을 완화
+alter table public.scores drop constraint if exists scores_time_chk;
+alter table public.scores add constraint scores_time_chk check (time_limit > 0);
+
+-- 6) 마이그레이션(중요): 이 버전 이전에 저장된 기록은 solved가 "정답 개수"였습니다.
+--    (문제당 10점 체계 도입 전 데이터) 아래 조건에 해당하는 옛 기록을 점수 기준으로 보정합니다.
+--    - solved가 5의 배수가 아니면 100% 옛 데이터이므로 반드시 필요합니다.
+--    - 이미 점수 체계로 저장된 최신 기록까지 다시 곱하지 않도록, 먼저 데이터를 확인한 뒤 실행하세요.
+-- update public.scores set solved = solved * 10 where solved % 5 <> 0;

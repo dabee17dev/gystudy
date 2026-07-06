@@ -480,6 +480,15 @@
             transition: all 0.2s;
             box-sizing: border-box;
         }
+        /* 랭킹 게임별 탭 (4개, dict-tab의 50% 고정폭 오버라이드) */
+        .rank-tabs { flex-wrap: wrap; }
+        .rank-tab {
+            flex: 1 1 auto;
+            width: auto;
+            min-width: 5rem;
+            font-size: 0.85rem;
+            padding: 0.6rem 0.3rem;
+        }
         .dict-tab.active {
             background: var(--text-main);
             color: var(--bg-container);
@@ -689,13 +698,6 @@
         }
         .hint-btn:hover { background: #d97706; color: #fff; }
         .hint-btn:disabled { opacity: 0.5; cursor: default; background: transparent; color: #d97706; }
-        .hint-text {
-            font-size: 1.1rem;
-            font-weight: 700;
-            letter-spacing: 0.15em;
-            color: var(--highlight);
-            min-height: 1.5rem;
-        }
 
         /* ---- 반응형 (모바일 / 작은 화면) ---- */
         /* 카드가 화면을 꽉 채우도록 (세로 좁은 폭 OR 가로 낮은 높이) */
@@ -847,13 +849,14 @@
                 <button class="game-card" onclick="startFromMenu(2)"><span class="gc-emoji">📖</span><span class="gc-title">매칭 게임</span><span class="gc-sub">객관식 · 쉬움</span></button>
             </div>
 
-            <!-- 시간 · 난이도 선택 (게임 시작 시 적용) -->
+            <!-- 문제 종류 · 난이도 선택 (게임 시작 시 적용, 제한시간은 100초 고정) -->
             <div id="menu-options" style="display: none;">
                 <div class="opt-group">
-                    <span class="opt-label">⏱️ 시간</span>
+                    <span class="opt-label">📚 문제 종류</span>
                     <div class="seg">
-                        <button class="seg-btn active" id="mt-60" onclick="selMenuTime(60)">1분</button>
-                        <button class="seg-btn" id="mt-120" onclick="selMenuTime(120)">2분</button>
+                        <button class="seg-btn active" id="mc-all" onclick="selMenuCategory('all')">전체</button>
+                        <button class="seg-btn" id="mc-proverb" onclick="selMenuCategory('속담')">속담만</button>
+                        <button class="seg-btn" id="mc-idiom" onclick="selMenuCategory('관용어')">관용어만</button>
                     </div>
                 </div>
                 <div class="opt-group">
@@ -879,10 +882,12 @@
         <div class="container" id="ranking-area" style="height: 55rem; max-height: 90vh; padding: 2.5rem; justify-content: flex-start;">
             <button class="close-btn" onclick="hideRanking()">✕</button>
             <h2 style="font-size: 2rem; margin-bottom: 0.3rem;">🏆 랭킹</h2>
-            <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1.2rem;">모드 상관없이 맞힌 개수로 겨룹니다. <b>어려움</b>이 위, <b>쉬움</b>이 아래.</p>
-            <div class="dict-tabs" style="margin-bottom: 1rem;">
-                <div class="dict-tab active" id="rtab-60" onclick="selectRankTime(60)">1분</div>
-                <div class="dict-tab" id="rtab-120" onclick="selectRankTime(120)">2분</div>
+            <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1.2rem;">게임별로 겨룹니다. <b>어려움</b>이 위, <b>쉬움</b>이 아래.</p>
+            <div class="dict-tabs rank-tabs" style="margin-bottom: 1rem;">
+                <div class="dict-tab rank-tab active" id="rmtab-1" onclick="selectRankMode(1)">표현맞추기</div>
+                <div class="dict-tab rank-tab" id="rmtab-4" onclick="selectRankMode(4)">뜻맞추기</div>
+                <div class="dict-tab rank-tab" id="rmtab-3" onclick="selectRankMode(3)">초성퀴즈</div>
+                <div class="dict-tab rank-tab" id="rmtab-2" onclick="selectRankMode(2)">매칭게임</div>
             </div>
             <div id="ranking-list" class="leaderboard" style="flex: 1; overflow-y: auto;">
                 <div class="lb-empty">불러오는 중…</div>
@@ -956,7 +961,6 @@
                 <input type="text" id="answer-input" class="input-box" placeholder="정답을 입력하세요" onkeypress="if(event.key === 'Enter') submitAnswer()">
                 <div id="hint-row" style="display: none;">
                     <button class="hint-btn" id="hint-btn" onclick="useHint()">💡 힌트 (정답 점수 50%)</button>
-                    <div id="hint-text" class="hint-text"></div>
                 </div>
                 <button class="action-btn" onclick="submitAnswer()">확인</button>
             </div>
@@ -991,7 +995,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.19.0";
+        const APP_VERSION = "1.20.0";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -1340,11 +1344,11 @@
         }
 
         // 난이도별(모드 무관) 상위 조회 — 같은 제한시간끼리, 맞힌 개수 desc
-        async function sbFetchByDiff(timeLimit, difficulty, limit = 50) {
+        async function sbFetchByDiff(mode, difficulty, limit = 50) {
             if (!SB_ENABLED) return null;
             try {
                 // 넉넉히 받아와 아이디(이름)별 최고 기록만 남긴 뒤 상위 N개
-                const q = `time_limit=eq.${timeLimit}&difficulty=eq.${difficulty}` +
+                const q = `mode=eq.${mode}&difficulty=eq.${difficulty}` +
                           `&select=id,nickname,solved,accuracy,difficulty` +
                           `&order=solved.desc,accuracy.desc,created_at.asc&limit=1000`;
                 const res = await fetch(`${SB_URL}/rest/v1/scores?${q}`, { headers: SB_HEADERS });
@@ -1362,12 +1366,12 @@
             } catch (e) { console.warn('[랭킹] 조회 실패:', e.message); return null; }
         }
 
-        // 어려움(상위) + 쉬움(하위) 통합 조회 → { hard:[...], easy:[...] } (실패 시 null)
-        async function sbFetchCombined(timeLimit, perDiff = 50) {
+        // 어려움(상위) + 쉬움(하위) 통합 조회 → { hard:[...], easy:[...] } (실패 시 null), 게임(mode)별로 구분
+        async function sbFetchCombined(mode, perDiff = 50) {
             if (!SB_ENABLED) return null;
             const [hard, easy] = await Promise.all([
-                sbFetchByDiff(timeLimit, 'hard', perDiff),
-                sbFetchByDiff(timeLimit, 'easy', perDiff)
+                sbFetchByDiff(mode, 'hard', perDiff),
+                sbFetchByDiff(mode, 'easy', perDiff)
             ]);
             if (hard === null && easy === null) return null;
             return { hard: hard || [], easy: easy || [] };
@@ -1635,7 +1639,7 @@
         
         // 추가된 상태 변수들
         let playerNickname = "플레이어";
-        let totalTime = 120;     // 전체 제한시간(초)
+        const totalTime = 100;   // 전체 제한시간(초) — 고정
         let timerInterval = null;
         let timeRemaining = 0;
         let answered = 0;        // 시도한 문제 수
@@ -1643,8 +1647,8 @@
         let gameOver = false;
         let setupMode = 1;
         let difficulty = 'easy'; // 'easy' | 'hard' — 모드1/4 카드조합 난이도
-        let menuTime = 60;       // 메인에서 선택한 제한시간(초)
         let menuDiff = 'easy';   // 메인에서 선택한 난이도
+        let menuCategory = 'all'; // 메인에서 선택한 문제 종류: 'all' | '속담' | '관용어'
         let hintUsed = false;    // 초성 퀴즈: 현재 문제에서 힌트 사용 여부
 
         function shuffle(array) {
@@ -1667,11 +1671,12 @@
             document.getElementById('global-settings-btn').style.display = 'block';
         }
 
-        // 메인에서 시간/난이도 선택 (세그먼트)
-        function selMenuTime(t) {
-            menuTime = t;
-            document.getElementById('mt-60').className = t === 60 ? 'seg-btn active' : 'seg-btn';
-            document.getElementById('mt-120').className = t === 120 ? 'seg-btn active' : 'seg-btn';
+        // 메인에서 문제 종류/난이도 선택 (세그먼트)
+        function selMenuCategory(c) {
+            menuCategory = c;
+            document.getElementById('mc-all').className = c === 'all' ? 'seg-btn active' : 'seg-btn';
+            document.getElementById('mc-proverb').className = c === '속담' ? 'seg-btn active' : 'seg-btn';
+            document.getElementById('mc-idiom').className = c === '관용어' ? 'seg-btn active' : 'seg-btn';
         }
         function selMenuDiff(d) {
             menuDiff = d;
@@ -1684,7 +1689,6 @@
             if (!currentPlayer) { alert('먼저 이름으로 로그인해 주세요.'); return; }
             setupMode = mode;
             playerNickname = currentPlayer;
-            totalTime = menuTime;
             // 매칭 게임(모드2)은 난이도 구분이 없어 항상 쉬움으로 진행
             difficulty = (mode === 2) ? 'easy' : menuDiff;
             document.getElementById('main-menu').style.display = 'none';
@@ -1725,8 +1729,9 @@
             answered = 0;
             gameOver = false;
 
-            // 전체를 섞어 제한시간 동안 최대한 많이 풀도록
-            currentQuestions = shuffle([...DB]);
+            // 선택한 문제 종류(전체/속담만/관용어만)로 필터링 후 섞어서 출제
+            const pool = menuCategory === 'all' ? DB : DB.filter(d => d.type === menuCategory);
+            currentQuestions = shuffle([...pool]);
 
             document.getElementById('game-area').style.display = 'flex';
             document.getElementById('game-area').style.flexDirection = 'column';
@@ -1779,7 +1784,6 @@
             hintUsed = false;
             document.getElementById('hint-row').style.display = currentMode === 3 ? 'flex' : 'none';
             document.getElementById('hint-btn').disabled = false;
-            document.getElementById('hint-text').innerText = '';
 
             const q = currentQuestions[currentIndex];
             const qText = document.getElementById('question-text');
@@ -1816,7 +1820,7 @@
                     optionsSec.appendChild(btn);
                 });
             } else if (currentMode === 3) {
-                qText.innerText = `초성: ${q.chosung}\n뜻: ${exactMeaning}\n\n이 ${label}은(는)?`;
+                renderMode3Question();
                 inputSec.style.display = 'block';
                 inputField.focus();
             } else if (currentMode === 4) {
@@ -1926,15 +1930,19 @@
             return Array.isArray(q.aliases) && q.aliases.some(a => isSimilarAnswer(input, a));
         }
 
-        // 초성 퀴즈 힌트: 공백 제외 글자의 약 50%를 노출 (사용 시 이번 문제 점수 절반)
-        function useHint() {
-            if (gameOver || hintUsed) return;
+        // 모드3(초성 퀴즈) 문제 텍스트 렌더링. 힌트 사용 시 초성 줄 바로 아래에 절반 노출된 글자를 채워 넣음
+        function renderMode3Question() {
             const q = currentQuestions[currentIndex];
-            if (!q) return;
-            hintUsed = true;
-            document.getElementById('hint-btn').disabled = true;
+            const label = q.type === "속담" ? "속담" : "관용표현";
+            const lines = [`초성: ${q.chosung}`];
+            if (hintUsed) lines.push(`힌트: ${buildHintReveal(q.idiom)}`);
+            lines.push(`뜻: ${q.meaning}`, '', `이 ${label}은(는)?`);
+            document.getElementById('question-text').innerText = lines.join('\n');
+        }
 
-            const chars = q.idiom.split('');
+        // 공백 제외 글자의 약 50%를 노출한 문자열 생성 (예: "발_을 잡_")
+        function buildHintReveal(idiom) {
+            const chars = idiom.split('');
             const nonSpaceCount = chars.filter(c => c !== ' ').length;
             const revealCount = Math.ceil(nonSpaceCount / 2);
             let revealed = 0;
@@ -1948,7 +1956,17 @@
             for (let i = 0; i < masked.length && revealed < revealCount; i++) {
                 if (masked[i] === '_') { masked[i] = chars[i]; revealed++; }
             }
-            document.getElementById('hint-text').innerText = masked.join('');
+            return masked.join('');
+        }
+
+        // 초성 퀴즈 힌트: 초성 줄 아래에 글자의 약 50%를 노출 (사용 시 이번 문제 점수 절반)
+        function useHint() {
+            if (gameOver || hintUsed) return;
+            const q = currentQuestions[currentIndex];
+            if (!q) return;
+            hintUsed = true;
+            document.getElementById('hint-btn').disabled = true;
+            renderMode3Question();
         }
 
         function submitAnswer() {
@@ -2065,8 +2083,8 @@
                 solved: score, attempted: answered, accuracy
             });
 
-            // 모드 무관, 어려움(상위)+쉬움(하위) 통합 보드 (아이디별 최고 기록만, 상위 50)
-            const data = await sbFetchCombined(totalTime);
+            // 이번 게임(모드) 기준, 어려움(상위)+쉬움(하위) 통합 보드 (아이디별 최고 기록만, 상위 50)
+            const data = await sbFetchCombined(currentMode);
             renderCombinedBoard(board, data, playerNickname);
 
             const diffLabel = difficulty === 'hard' ? '어려움' : '쉬움';
@@ -2084,21 +2102,23 @@
         }
 
         // ---- 랭킹 패널 ----
-        let rankTime = 60; // 선택된 랭킹 시간대(초): 60 | 120
+        let rankMode = 1; // 선택된 랭킹 게임(모드): 1|2|3|4
 
         function showRanking() {
             document.getElementById('main-menu').style.display = 'none';
             document.getElementById('global-settings-btn').style.display = 'none';
             document.getElementById('ranking-area').style.display = 'flex';
             document.getElementById('ranking-area').style.flexDirection = 'column';
-            selectRankTime(rankTime);
+            selectRankMode(rankMode);
         }
 
-        // 탭 카드로 시간대 선택 → 해당 랭킹 표시
-        function selectRankTime(t) {
-            rankTime = t;
-            document.getElementById('rtab-60').className = t === 60 ? 'dict-tab active' : 'dict-tab';
-            document.getElementById('rtab-120').className = t === 120 ? 'dict-tab active' : 'dict-tab';
+        // 탭으로 게임(모드) 선택 → 해당 랭킹 표시
+        function selectRankMode(m) {
+            rankMode = m;
+            document.getElementById('rmtab-1').className = m === 1 ? 'dict-tab rank-tab active' : 'dict-tab rank-tab';
+            document.getElementById('rmtab-4').className = m === 4 ? 'dict-tab rank-tab active' : 'dict-tab rank-tab';
+            document.getElementById('rmtab-3').className = m === 3 ? 'dict-tab rank-tab active' : 'dict-tab rank-tab';
+            document.getElementById('rmtab-2').className = m === 2 ? 'dict-tab rank-tab active' : 'dict-tab rank-tab';
             loadRanking();
         }
 
@@ -2111,7 +2131,7 @@
         async function loadRanking() {
             const list = document.getElementById('ranking-list');
             list.innerHTML = '<div class="lb-empty">불러오는 중…</div>';
-            const data = await sbFetchCombined(rankTime);
+            const data = await sbFetchCombined(rankMode);
             renderCombinedBoard(list, data, currentPlayer);
         }
 
