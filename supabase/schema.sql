@@ -26,10 +26,12 @@ create table if not exists public.scores (
     solved      int         not null,            -- 획득 점수 (문제당 최대 10점, 힌트 사용 시 5점)
     attempted   int         not null,            -- 시도 개수
     accuracy    real,                            -- 정답률(0~1), 점수와 별개로 계산됨
+    category    text        not null default 'all', -- 문제 종류: 'all' | '속담' | '관용어'
     created_at  timestamptz not null default now(),
     constraint scores_solved_chk    check (solved >= 0 and solved <= attempted * 10),
     constraint scores_difficulty_chk check (difficulty in ('easy','hard')),
     constraint scores_time_chk      check (time_limit > 0),
+    constraint scores_category_chk  check (category in ('all','속담','관용어')),
     constraint scores_nick_chk      check (char_length(nickname) between 1 and 12)
 );
 
@@ -72,3 +74,8 @@ alter table public.scores add constraint scores_time_chk check (time_limit > 0);
 --    - solved가 5의 배수가 아니면 100% 옛 데이터이므로 반드시 필요합니다.
 --    - 이미 점수 체계로 저장된 최신 기록까지 다시 곱하지 않도록, 먼저 데이터를 확인한 뒤 실행하세요.
 -- update public.scores set solved = solved * 10 where solved % 5 <> 0;
+
+-- 7) 마이그레이션: 기존 테이블에 문제 종류(category) 컬럼 추가 (랭킹에 전체/속담만/관용어만 표시용)
+alter table public.scores add column if not exists category text not null default 'all';
+alter table public.scores drop constraint if exists scores_category_chk;
+alter table public.scores add constraint scores_category_chk check (category in ('all','속담','관용어'));
