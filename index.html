@@ -636,9 +636,16 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            text-align: center;
             padding-right: 0.5rem;
         }
-        .lb-solved { font-weight: 700; color: var(--highlight); flex-shrink: 0; }
+        .lb-solved {
+            font-weight: 700;
+            color: var(--highlight);
+            flex-shrink: 0;
+            width: 3.6rem;
+            text-align: right;
+        }
         .lb-acc { width: 3.6rem; text-align: right; color: var(--text-dim); font-size: 0.85rem; flex-shrink: 0; }
         .lb-empty { padding: 1.5rem; text-align: center; color: var(--text-dim); font-size: 0.9rem; }
         .lb-badge {
@@ -951,7 +958,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.17.0";
+        const APP_VERSION = "1.18.0";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -1300,20 +1307,30 @@
         }
 
         // 난이도별(모드 무관) 상위 조회 — 같은 제한시간끼리, 맞힌 개수 desc
-        async function sbFetchByDiff(timeLimit, difficulty, limit = 20) {
+        async function sbFetchByDiff(timeLimit, difficulty, limit = 50) {
             if (!SB_ENABLED) return null;
             try {
+                // 넉넉히 받아와 아이디(이름)별 최고 기록만 남긴 뒤 상위 N개
                 const q = `time_limit=eq.${timeLimit}&difficulty=eq.${difficulty}` +
                           `&select=id,nickname,solved,accuracy,difficulty` +
-                          `&order=solved.desc,accuracy.desc,created_at.asc&limit=${limit}`;
+                          `&order=solved.desc,accuracy.desc,created_at.asc&limit=1000`;
                 const res = await fetch(`${SB_URL}/rest/v1/scores?${q}`, { headers: SB_HEADERS });
                 if (!res.ok) throw new Error(`select ${res.status}`);
-                return await res.json();
+                const rows = await res.json();
+                // 정렬상 각 이름의 첫 등장이 그 사람의 최고 기록
+                const seen = new Set();
+                const best = [];
+                for (const r of rows) {
+                    if (seen.has(r.nickname)) continue;
+                    seen.add(r.nickname);
+                    best.push(r);
+                }
+                return best.slice(0, limit);
             } catch (e) { console.warn('[랭킹] 조회 실패:', e.message); return null; }
         }
 
         // 어려움(상위) + 쉬움(하위) 통합 조회 → { hard:[...], easy:[...] } (실패 시 null)
-        async function sbFetchCombined(timeLimit, perDiff = 20) {
+        async function sbFetchCombined(timeLimit, perDiff = 50) {
             if (!SB_ENABLED) return null;
             const [hard, easy] = await Promise.all([
                 sbFetchByDiff(timeLimit, 'hard', perDiff),
@@ -1323,8 +1340,8 @@
             return { hard: hard || [], easy: easy || [] };
         }
 
-        // 통합 리더보드 렌더: 어려움 → 쉬움, 각 줄에 난이도 배지, highlightId 강조
-        function renderCombinedBoard(container, data, highlightId) {
+        // 통합 리더보드 렌더: 어려움 → 쉬움, 각 줄에 난이도 배지, highlightNick(이름) 강조
+        function renderCombinedBoard(container, data, highlightNick) {
             if (!SB_ENABLED) {
                 container.innerHTML = '<div class="lb-empty">랭킹 서버가 설정되지 않았습니다.<br>(.env.local 확인)</div>';
                 return;
@@ -1341,7 +1358,7 @@
                 const rank = i + 1;
                 const medal = rank <= 3 ? ' medal' : '';
                 const mark = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
-                const me = (highlightId != null && r.id === highlightId) ? ' me' : '';
+                const me = (highlightNick && r.nickname === highlightNick) ? ' me' : '';
                 const acc = (r.accuracy != null) ? Math.round(r.accuracy * 100) + '%' : '-';
                 const nick = escapeHtml(r.nickname);
                 return `<div class="lb-row${me}">
@@ -1958,18 +1975,17 @@
                 solved: score, attempted: answered, accuracy
             });
 
-            // 모드 무관, 어려움(상위)+쉬움(하위) 통합 보드 (이번 판 시간대)
+            // 모드 무관, 어려움(상위)+쉬움(하위) 통합 보드 (아이디별 최고 기록만, 상위 50)
             const data = await sbFetchCombined(totalTime);
-            const myId = saved ? saved.id : null;
-            renderCombinedBoard(board, data, myId);
+            renderCombinedBoard(board, data, playerNickname);
 
             const diffLabel = difficulty === 'hard' ? '어려움' : '쉬움';
-            if (data && myId != null) {
+            if (data && saved) {
                 const myList = difficulty === 'hard' ? data.hard : data.easy;
-                const rank = myList.findIndex(r => r.id === myId);
+                const rank = myList.findIndex(r => r.nickname === playerNickname);
                 status.innerText = rank >= 0
-                    ? `내 순위: ${diffLabel} ${rank + 1}위 / ${myList.length}명 (상위 20 기준)`
-                    : `기록 저장됨 · ${diffLabel} 상위 20위권 밖`;
+                    ? `내 순위: ${diffLabel} ${rank + 1}위 / ${myList.length}명 (상위 50 기준)`
+                    : `기록 저장됨 · ${diffLabel} 상위 50위권 밖`;
             } else if (!saved) {
                 status.innerText = '⚠️ 기록 저장 실패 (아래 목록만 표시)';
             } else {
@@ -2006,7 +2022,7 @@
             const list = document.getElementById('ranking-list');
             list.innerHTML = '<div class="lb-empty">불러오는 중…</div>';
             const data = await sbFetchCombined(rankTime);
-            renderCombinedBoard(list, data, null);
+            renderCombinedBoard(list, data, currentPlayer);
         }
 
         // ---- 초기화 ----
