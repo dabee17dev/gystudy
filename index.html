@@ -996,7 +996,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.21.0";
+        const APP_VERSION = "1.21.1";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -1411,9 +1411,10 @@
                 </div>`;
             }).join('');
 
-            let html = section(data.hard, 'hard', '어려움');
-            if (data.hard.length && data.easy.length) html += '<div class="lb-sep">─ 쉬움 ─</div>';
-            html += section(data.easy, 'easy', '쉬움');
+            // 유저가 1명뿐이어도 각 난이도 구간에 항상 라벨 바를 표시
+            let html = '';
+            if (data.hard.length) html += '<div class="lb-sep">─ 어려움 ─</div>' + section(data.hard, 'hard', '어려움');
+            if (data.easy.length) html += '<div class="lb-sep">─ 쉬움 ─</div>' + section(data.easy, 'easy', '쉬움');
             container.innerHTML = html;
         }
 
