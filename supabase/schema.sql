@@ -16,8 +16,14 @@ create table if not exists public.players (
 alter table public.players enable row level security;
 drop policy if exists "public read players"   on public.players;
 drop policy if exists "public insert players" on public.players;
+drop policy if exists "assign class to unassigned players" on public.players;
 create policy "public read players"   on public.players for select using (true);
 create policy "public insert players" on public.players for insert with check (true);
+-- 반이 아직 없는(null) 계정에 한해서만 반 배정을 위한 수정 허용 (이미 반이 있는 계정은 수정 불가 → 탈취 방지)
+create policy "assign class to unassigned players"
+    on public.players for update
+    using (class is null)
+    with check (true);
 
 -- 1) 점수(게임 결과) 테이블
 create table if not exists public.scores (
@@ -99,3 +105,11 @@ alter table public.scores add column if not exists class int;
 --      (다른 반 학생도 접속했을 수 있어, 함부로 우리 반으로 단정하지 않습니다.)
 update public.players set class = 5 where class is null and nickname like '5반%';
 update public.scores  set class = 5 where class is null and nickname like '5반%';
+
+-- 9) 마이그레이션: 반 미배정 계정을 로그인 시 반을 선택해 연결할 수 있게 하는 정책.
+--    class가 null인 행만 수정 허용(이미 반이 배정된 계정은 수정 불가 → 탈취 방지).
+drop policy if exists "assign class to unassigned players" on public.players;
+create policy "assign class to unassigned players"
+    on public.players for update
+    using (class is null)
+    with check (true);

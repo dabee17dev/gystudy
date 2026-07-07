@@ -460,6 +460,18 @@
             display: block;
         }
 
+        /* 반 미배정 계정 연결 오버레이 */
+        #assign-class-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 1100;
+            background: rgba(0, 0, 0, 0.6);
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
         /* Tabs */
         .dict-tabs {
             display: flex;
@@ -952,6 +964,19 @@
             </div>
         </div>
 
+        <!-- 반 미배정 계정 연결 오버레이 -->
+        <div id="assign-class-overlay">
+            <div class="qr-box">
+                <h3 style="margin-bottom: 0.5rem;">🏫 반을 선택해주세요</h3>
+                <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1rem; line-height: 1.5;">
+                    <b id="assign-class-name"></b>님은 예전에 만든 계정이 있어요.<br>반을 선택하면 계정이 연결돼요.
+                </p>
+                <input type="number" id="assign-class-input" class="input-box" min="1" max="20" placeholder="반" style="text-align: center; margin: 0 0 0.75rem 0;" onkeypress="if(event.key==='Enter') confirmAssignClass()">
+                <div id="assign-class-msg" style="min-height: 1.2rem; font-size: 0.85rem; margin-bottom: 0.75rem;"></div>
+                <button class="menu-btn" style="background: var(--highlight); color: #fff; border: none; font-weight: bold; margin: 0;" onclick="confirmAssignClass()">확인</button>
+            </div>
+        </div>
+
         <!-- Game Area -->
         <div class="container" id="game-area">
             <button class="close-btn" title="게임 종료" onclick="goHome()">✖</button>
@@ -1000,7 +1025,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.22.0";
+        const APP_VERSION = "1.23.0";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -1352,8 +1377,9 @@
         async function sbFetchByDiff(mode, difficulty, limit = 50) {
             if (!SB_ENABLED) return null;
             try {
+                // 정답률 85% 미만은 랭킹에서 제외(기존에 저장된 기록도 동일하게 적용)
                 // 넉넉히 받아와 (반+이름)별 최고 기록만 남긴 뒤 상위 N개
-                const q = `mode=eq.${mode}&difficulty=eq.${difficulty}` +
+                const q = `mode=eq.${mode}&difficulty=eq.${difficulty}&accuracy=gte.${RANK_ACCURACY_MIN}` +
                           `&select=id,nickname,solved,accuracy,difficulty,category,class` +
                           `&order=solved.desc,accuracy.desc,created_at.asc&limit=1000`;
                 const res = await fetch(`${SB_URL}/rest/v1/scores?${q}`, { headers: SB_HEADERS });
@@ -1443,6 +1469,34 @@
             } catch (e) { console.warn('[플레이어] 조회 실패:', e.message); return undefined; } // undefined = 확인 불가
         }
 
+        // 반이 등록되지 않은(예전 계정) 동일 이름 플레이어 조회
+        async function sbFindUnassignedPlayer(nick) {
+            if (!SB_ENABLED) return null;
+            try {
+                const res = await fetch(`${SB_URL}/rest/v1/players?nickname=eq.${encodeURIComponent(nick)}&class=is.null&select=nickname&limit=1`, { headers: SB_HEADERS });
+                if (!res.ok) throw new Error(`find-unassigned ${res.status}`);
+                const rows = await res.json();
+                return rows[0] || null;
+            } catch (e) { console.warn('[플레이어] 미배정 조회 실패:', e.message); return null; }
+        }
+
+        // 반이 없는(null) 기존 계정에 반을 배정 (RLS: class is null 인 행만 수정 허용)
+        async function sbAssignClass(nick, cls) {
+            if (!SB_ENABLED) return false;
+            try {
+                // return=representation으로 실제 변경된 행을 받아야 함.
+                // RLS 정책이 없으면 200 OK지만 빈 배열([])이 오는 "조용한 실패"가 생길 수 있어 반드시 확인.
+                const res = await fetch(`${SB_URL}/rest/v1/players?nickname=eq.${encodeURIComponent(nick)}&class=is.null`, {
+                    method: 'PATCH',
+                    headers: { ...SB_HEADERS, 'Prefer': 'return=representation' },
+                    body: JSON.stringify({ class: cls })
+                });
+                if (!res.ok) throw new Error(`assign ${res.status}`);
+                const rows = await res.json();
+                return rows.length > 0;
+            } catch (e) { console.warn('[플레이어] 반 배정 실패:', e.message); return false; }
+        }
+
         // 플레이어 신규 등록 (성공 true, 중복이면 409)
         async function sbRegisterPlayer(nick, cls) {
             if (!SB_ENABLED) return false;
@@ -1482,6 +1536,13 @@
                 if (found) {
                     kind = 'login';
                 } else if (found === null) {
+                    // 정확히 일치하는 계정이 없음 → 반 미등록 상태의 예전 계정인지 확인
+                    const unassigned = await sbFindUnassignedPlayer(nick);
+                    if (unassigned) {
+                        showAssignClassOverlay(nick, cls);
+                        msg.innerText = '';
+                        return; // 오버레이에서 반 선택 후 로그인 완료됨
+                    }
                     const reg = await sbRegisterPlayer(nick, cls);
                     kind = (reg === 'exists') ? 'login' : (reg === true ? 'signup' : 'local');
                 } else {
@@ -1494,6 +1555,40 @@
             msg.innerText = kind === 'signup' ? `가입 완료! 환영합니다, ${cls}반 ${nick}님 🎉`
                           : kind === 'login'  ? `${cls}반 ${nick}님 로그인 완료 👋`
                           : `${cls}반 ${nick}님으로 시작합니다.`;
+        }
+
+        // ---- 반 미배정 계정 연결 오버레이 ----
+        let pendingAssignNick = null;
+
+        function showAssignClassOverlay(nick, suggestedCls) {
+            pendingAssignNick = nick;
+            document.getElementById('assign-class-name').innerText = nick;
+            document.getElementById('assign-class-input').value = suggestedCls || '';
+            document.getElementById('assign-class-msg').innerText = '';
+            document.getElementById('assign-class-overlay').style.display = 'flex';
+        }
+
+        function hideAssignClassOverlay() {
+            document.getElementById('assign-class-overlay').style.display = 'none';
+            pendingAssignNick = null;
+        }
+
+        async function confirmAssignClass() {
+            const msg = document.getElementById('assign-class-msg');
+            const cls = parseInt(document.getElementById('assign-class-input').value, 10);
+            if (!cls || cls < 1 || cls > 20) { msg.style.color = '#dc2626'; msg.innerText = '반을 숫자로 입력하세요.'; return; }
+
+            msg.style.color = 'var(--text-dim)';
+            msg.innerText = '연결 중…';
+            const ok = await sbAssignClass(pendingAssignNick, cls);
+            if (!ok) { msg.style.color = '#dc2626'; msg.innerText = '반 등록에 실패했어요. 다시 시도해주세요.'; return; }
+
+            const nick = pendingAssignNick;
+            hideAssignClassOverlay();
+            setCurrentPlayer(nick, cls);
+            const loginMsg = document.getElementById('login-msg');
+            loginMsg.style.color = '#16a34a';
+            loginMsg.innerText = `반 등록 완료! ${cls}반 ${nick}님 환영합니다 🎉`;
         }
 
         function setCurrentPlayer(nick, cls) {
@@ -1927,6 +2022,9 @@
         // 정답 유사도 판정: 약 80% 이상 비슷하면 통과 (조사/어미 차이·경미한 오타 허용)
         const FUZZY_THRESHOLD = 0.8;
 
+        // 랭킹 등록 최소 정답률 (이 미만은 저장하지 않고 랭킹에서도 제외)
+        const RANK_ACCURACY_MIN = 0.85;
+
         function levenshtein(a, b) {
             const m = a.length, n = b.length;
             if (m === 0) return n;
@@ -2102,10 +2200,19 @@
                 return;
             }
 
+            const accuracy = answered > 0 ? Math.round((correctCount / answered) * 1000) / 1000 : 0;
+
+            // 정답률 85% 미만은 랭킹 등록 대상이 아님 (저장하지 않고 안내만 표시)
+            if (accuracy < RANK_ACCURACY_MIN) {
+                status.innerText = `📌 정답률 ${Math.round(accuracy * 100)}%로 랭킹 등록 대상이 아니에요 (${Math.round(RANK_ACCURACY_MIN * 100)}% 이상만 랭킹에 등록됩니다)`;
+                const data = await sbFetchCombined(currentMode);
+                renderCombinedBoard(board, data, null, null); // 저장 안 했으므로 강조 없음
+                return;
+            }
+
             status.innerText = '기록 저장 중…';
             board.innerHTML = '<div class="lb-empty">불러오는 중…</div>';
 
-            const accuracy = answered > 0 ? Math.round((correctCount / answered) * 1000) / 1000 : 0;
             const saved = await sbInsertScore({
                 nickname: playerNickname, ...cond,
                 solved: score, attempted: answered, accuracy
