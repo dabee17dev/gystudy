@@ -3,11 +3,14 @@
 -- (anon 키로는 테이블 생성이 불가하므로 대시보드에서 1회 실행이 필요합니다.)
 
 -- 0) 플레이어(닉네임) 테이블 — 비밀번호 없는 가입/로그인용
+-- 신원 = (반, 이름) 조합. 같은 이름이라도 반이 다르면 다른 사람으로 취급
 create table if not exists public.players (
     id          bigint generated always as identity primary key,
-    nickname    text        not null unique,
+    nickname    text        not null,
+    class       int         not null,
     created_at  timestamptz not null default now(),
-    constraint players_nick_chk check (char_length(nickname) between 1 and 12)
+    constraint players_nick_chk check (char_length(nickname) between 1 and 12),
+    constraint players_unique unique (nickname, class)
 );
 
 alter table public.players enable row level security;
@@ -27,6 +30,7 @@ create table if not exists public.scores (
     attempted   int         not null,            -- 시도 개수
     accuracy    real,                            -- 정답률(0~1), 점수와 별개로 계산됨
     category    text        not null default 'all', -- 문제 종류: 'all' | '속담' | '관용어'
+    class       int,                             -- 반. 옛 기록은 null(미배정)일 수 있음
     created_at  timestamptz not null default now(),
     constraint scores_solved_chk    check (solved >= 0 and solved <= attempted * 10),
     constraint scores_difficulty_chk check (difficulty in ('easy','hard')),
@@ -79,3 +83,19 @@ alter table public.scores add constraint scores_time_chk check (time_limit > 0);
 alter table public.scores add column if not exists category text not null default 'all';
 alter table public.scores drop constraint if exists scores_category_chk;
 alter table public.scores add constraint scores_category_chk check (category in ('all','속담','관용어'));
+
+-- 8) 마이그레이션(중요): 반(class) 컬럼 추가.
+--    여러 반이 접속해 같은 이름이 겹치는 문제를 막기 위해, 이제 신원은 (반, 이름) 조합입니다.
+--    기존 players의 nickname 단독 유니크 제약을 제거하고 (nickname, class) 조합으로 교체합니다.
+alter table public.players add column if not exists class int;
+alter table public.players drop constraint if exists players_nickname_key; -- 예전 "unique" 인라인 제약의 기본 이름
+alter table public.players drop constraint if exists players_unique;
+alter table public.players add constraint players_unique unique (nickname, class);
+
+alter table public.scores add column if not exists class int;
+
+-- 8-1) 기존 데이터 보정: "5반"으로 시작하는 닉네임만 5반으로 표시합니다.
+--      그 외 기존 기록은 어느 반인지 알 수 없으므로 class를 null(미배정)로 남겨둡니다.
+--      (다른 반 학생도 접속했을 수 있어, 함부로 우리 반으로 단정하지 않습니다.)
+update public.players set class = 5 where class is null and nickname like '5반%';
+update public.scores  set class = 5 where class is null and nickname like '5반%';

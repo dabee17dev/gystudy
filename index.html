@@ -669,6 +669,7 @@
         .lb-badge.hard { background: #dc2626; }
         .lb-badge.easy { background: #2563eb; }
         .lb-badge.cat { background: #6b7280; margin-right: 0.5rem; }
+        .lb-badge.cls { background: #15803d; margin-right: 0.5rem; }
         .lb-sep {
             padding: 0.35rem 0.9rem;
             font-size: 0.75rem;
@@ -823,7 +824,7 @@
                 <h1>관용표현 & 속담 퀴즈</h1>
                 <!-- 플레이어 정보 (로그인 상태) — 제목 오른쪽 -->
                 <div id="player-box" style="display: none;">
-                    <span>👤 <b id="player-name"></b>님</span>
+                    <span>👤 <b id="player-class"></b>반 <b id="player-name"></b>님</span>
                     <button class="logout-btn" onclick="logout()" title="로그아웃" aria-label="로그아웃">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                     </button>
@@ -832,7 +833,10 @@
 
             <!-- 로그인/가입 (로그아웃 상태) -->
             <div id="login-box" style="margin-bottom: 1rem;">
-                <input type="text" id="login-nickname" class="input-box" maxlength="4" placeholder="이름 (최대 4글자, 같은 이름이면 로그인)" style="margin: 0 0 0.5rem 0;" onkeypress="if(event.key==='Enter') login()">
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <input type="number" id="login-class" class="input-box" min="1" max="20" placeholder="반" style="margin: 0; width: 4.2rem; text-align: center; flex-shrink: 0;" onkeypress="if(event.key==='Enter') login()">
+                    <input type="text" id="login-nickname" class="input-box" maxlength="4" placeholder="이름 (최대 4글자, 같은 반+이름이면 로그인)" style="margin: 0; flex: 1;" onkeypress="if(event.key==='Enter') login()">
+                </div>
                 <button class="menu-btn" style="background: var(--highlight); color: #fff; border: none; font-weight: bold; margin: 0;" onclick="login()">로그인 / 가입</button>
                 <div id="login-msg" style="min-height: 1.2rem; margin-top: 0.5rem; font-size: 0.9rem;"></div>
             </div>
@@ -996,7 +1000,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.21.1";
+        const APP_VERSION = "1.22.0";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -1348,19 +1352,20 @@
         async function sbFetchByDiff(mode, difficulty, limit = 50) {
             if (!SB_ENABLED) return null;
             try {
-                // 넉넉히 받아와 아이디(이름)별 최고 기록만 남긴 뒤 상위 N개
+                // 넉넉히 받아와 (반+이름)별 최고 기록만 남긴 뒤 상위 N개
                 const q = `mode=eq.${mode}&difficulty=eq.${difficulty}` +
-                          `&select=id,nickname,solved,accuracy,difficulty,category` +
+                          `&select=id,nickname,solved,accuracy,difficulty,category,class` +
                           `&order=solved.desc,accuracy.desc,created_at.asc&limit=1000`;
                 const res = await fetch(`${SB_URL}/rest/v1/scores?${q}`, { headers: SB_HEADERS });
                 if (!res.ok) throw new Error(`select ${res.status}`);
                 const rows = await res.json();
-                // 정렬상 각 이름의 첫 등장이 그 사람의 최고 기록
+                // 정렬상 각 (반,이름)의 첫 등장이 그 사람의 최고 기록. 반이 다르면 동명이인도 별도 처리
                 const seen = new Set();
                 const best = [];
                 for (const r of rows) {
-                    if (seen.has(r.nickname)) continue;
-                    seen.add(r.nickname);
+                    const key = `${r.class ?? '?'}|${r.nickname}`;
+                    if (seen.has(key)) continue;
+                    seen.add(key);
                     best.push(r);
                 }
                 return best.slice(0, limit);
@@ -1378,8 +1383,8 @@
             return { hard: hard || [], easy: easy || [] };
         }
 
-        // 통합 리더보드 렌더: 어려움 → 쉬움, 각 줄에 난이도 배지, highlightNick(이름) 강조
-        function renderCombinedBoard(container, data, highlightNick) {
+        // 통합 리더보드 렌더: 어려움 → 쉬움, 각 줄에 난이도 배지, (highlightNick+highlightClass) 강조
+        function renderCombinedBoard(container, data, highlightNick, highlightClass) {
             if (!SB_ENABLED) {
                 container.innerHTML = '<div class="lb-empty">랭킹 서버가 설정되지 않았습니다.<br>(.env.local 확인)</div>';
                 return;
@@ -1397,14 +1402,16 @@
                 const rank = i + 1;
                 const medal = rank <= 3 ? ' medal' : '';
                 const mark = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
-                const me = (highlightNick && r.nickname === highlightNick) ? ' me' : '';
+                const me = (highlightNick && r.nickname === highlightNick && r.class === highlightClass) ? ' me' : '';
                 const acc = (r.accuracy != null) ? Math.round(r.accuracy * 100) + '%' : '-';
                 const nick = escapeHtml(r.nickname);
                 const catLabel = CAT_LABEL[r.category] || '전체'; // 종류 정보 없는 옛 기록은 전체로 표시
+                const classLabel = r.class ? `${r.class}반` : '미배정';
                 return `<div class="lb-row${me}">
                     <div class="lb-rank${medal}">${mark}</div>
                     <span class="lb-badge ${diff}">${label}</span>
                     <span class="lb-badge cat">${catLabel}</span>
+                    <span class="lb-badge cls">${classLabel}</span>
                     <div class="lb-name">${nick}</div>
                     <div class="lb-solved">${r.solved}점</div>
                     <div class="lb-acc">${acc}</div>
@@ -1425,11 +1432,11 @@
             ));
         }
 
-        // 닉네임으로 플레이어 조회 (있으면 행, 없으면 null)
-        async function sbFindPlayer(nick) {
+        // 반+닉네임으로 플레이어 조회 (있으면 행, 없으면 null)
+        async function sbFindPlayer(nick, cls) {
             if (!SB_ENABLED) return null;
             try {
-                const res = await fetch(`${SB_URL}/rest/v1/players?nickname=eq.${encodeURIComponent(nick)}&select=nickname&limit=1`, { headers: SB_HEADERS });
+                const res = await fetch(`${SB_URL}/rest/v1/players?nickname=eq.${encodeURIComponent(nick)}&class=eq.${cls}&select=nickname&limit=1`, { headers: SB_HEADERS });
                 if (!res.ok) throw new Error(`find ${res.status}`);
                 const rows = await res.json();
                 return rows[0] || null;
@@ -1437,13 +1444,13 @@
         }
 
         // 플레이어 신규 등록 (성공 true, 중복이면 409)
-        async function sbRegisterPlayer(nick) {
+        async function sbRegisterPlayer(nick, cls) {
             if (!SB_ENABLED) return false;
             try {
                 const res = await fetch(`${SB_URL}/rest/v1/players`, {
                     method: 'POST',
                     headers: { ...SB_HEADERS, 'Prefer': 'return=minimal' },
-                    body: JSON.stringify({ nickname: nick })
+                    body: JSON.stringify({ nickname: nick, class: cls })
                 });
                 if (res.status === 409) return 'exists';
                 if (!res.ok) throw new Error(`register ${res.status}`);
@@ -1451,14 +1458,19 @@
             } catch (e) { console.warn('[플레이어] 등록 실패:', e.message); return false; }
         }
 
-        // ---- 로그인 / 가입 (비밀번호 없음, 같은 닉네임이면 로그인) ----
+        // ---- 로그인 / 가입 (비밀번호 없음, 같은 반+이름이면 로그인) ----
         const PLAYER_KEY = 'gystudy-player';
         let currentPlayer = null;
+        let currentClass = null;
 
         async function login() {
+            const classInput = document.getElementById('login-class');
             const input = document.getElementById('login-nickname');
             const msg = document.getElementById('login-msg');
             const nick = input.value.trim().replace(/\s+/g, ' ').slice(0, 4);
+            const cls = parseInt(classInput.value, 10);
+
+            if (!cls || cls < 1 || cls > 20) { msg.style.color = '#dc2626'; msg.innerText = '반을 숫자로 입력하세요.'; return; }
             if (!nick) { msg.style.color = '#dc2626'; msg.innerText = '이름을 입력하세요.'; return; }
 
             msg.style.color = 'var(--text-dim)';
@@ -1466,34 +1478,37 @@
 
             let kind = 'local'; // 'login' | 'signup' | 'local'
             if (SB_ENABLED) {
-                const found = await sbFindPlayer(nick);
+                const found = await sbFindPlayer(nick, cls);
                 if (found) {
                     kind = 'login';
                 } else if (found === null) {
-                    const reg = await sbRegisterPlayer(nick);
+                    const reg = await sbRegisterPlayer(nick, cls);
                     kind = (reg === 'exists') ? 'login' : (reg === true ? 'signup' : 'local');
                 } else {
                     kind = 'local'; // 서버 확인 불가 → 로컬로만 진행
                 }
             }
 
-            setCurrentPlayer(nick);
+            setCurrentPlayer(nick, cls);
             msg.style.color = '#16a34a';
-            msg.innerText = kind === 'signup' ? `가입 완료! 환영합니다, ${nick}님 🎉`
-                          : kind === 'login'  ? `${nick}님 로그인 완료 👋`
-                          : `${nick}님으로 시작합니다.`;
+            msg.innerText = kind === 'signup' ? `가입 완료! 환영합니다, ${cls}반 ${nick}님 🎉`
+                          : kind === 'login'  ? `${cls}반 ${nick}님 로그인 완료 👋`
+                          : `${cls}반 ${nick}님으로 시작합니다.`;
         }
 
-        function setCurrentPlayer(nick) {
+        function setCurrentPlayer(nick, cls) {
             currentPlayer = nick;
-            try { localStorage.setItem(PLAYER_KEY, nick); } catch (e) {}
+            currentClass = cls;
+            try { localStorage.setItem(PLAYER_KEY, JSON.stringify({ nick, cls })); } catch (e) {}
             updatePlayerUI();
         }
 
         function logout() {
             currentPlayer = null;
+            currentClass = null;
             try { localStorage.removeItem(PLAYER_KEY); } catch (e) {}
             document.getElementById('login-nickname').value = '';
+            document.getElementById('login-class').value = '';
             document.getElementById('login-msg').innerText = '';
             updatePlayerUI();
         }
@@ -1504,7 +1519,10 @@
             document.getElementById('player-box').style.display = loggedIn ? 'flex' : 'none';
             document.getElementById('game-menu').style.display = loggedIn ? 'grid' : 'none';
             document.getElementById('menu-options').style.display = loggedIn ? 'flex' : 'none';
-            if (loggedIn) document.getElementById('player-name').innerText = currentPlayer;
+            if (loggedIn) {
+                document.getElementById('player-name').innerText = currentPlayer;
+                document.getElementById('player-class').innerText = currentClass;
+            }
         }
 
         // ---- Settings 저장/복원 (localStorage) ----
@@ -1644,6 +1662,7 @@
         
         // 추가된 상태 변수들
         let playerNickname = "플레이어";
+        let playerClass = null;  // 현재 게임 세션의 반
         const totalTime = 100;   // 전체 제한시간(초) — 고정
         let timerInterval = null;
         let timeRemaining = 0;
@@ -1694,6 +1713,7 @@
             if (!currentPlayer) { alert('먼저 이름으로 로그인해 주세요.'); return; }
             setupMode = mode;
             playerNickname = currentPlayer;
+            playerClass = currentClass;
             // 매칭 게임(모드2)은 난이도 구분이 없어 항상 쉬움으로 진행
             difficulty = (mode === 2) ? 'easy' : menuDiff;
             document.getElementById('main-menu').style.display = 'none';
@@ -2069,12 +2089,12 @@
             document.getElementById('result-area').style.display = 'flex';
             document.getElementById('result-area').style.flexDirection = 'column';
             document.getElementById('final-score').innerText =
-                `${playerNickname}님이 ${formatTime(totalTime)} 동안\n획득 점수: ${score}점  (시도 ${answered}개)`;
+                `${playerClass}반 ${playerNickname}님이 ${formatTime(totalTime)} 동안\n획득 점수: ${score}점  (시도 ${answered}개)`;
 
             const status = document.getElementById('result-rank-status');
             const board = document.getElementById('result-leaderboard');
             // 이번 판 조건 (랭킹 비교 단위)
-            const cond = { mode: currentMode, difficulty: difficulty, time_limit: totalTime, category: menuCategory };
+            const cond = { mode: currentMode, difficulty: difficulty, time_limit: totalTime, category: menuCategory, class: playerClass };
 
             if (!SB_ENABLED) {
                 status.innerText = '';
@@ -2091,14 +2111,14 @@
                 solved: score, attempted: answered, accuracy
             });
 
-            // 이번 게임(모드) 기준, 어려움(상위)+쉬움(하위) 통합 보드 (아이디별 최고 기록만, 상위 50)
+            // 이번 게임(모드) 기준, 어려움(상위)+쉬움(하위) 통합 보드 (반+이름별 최고 기록만, 상위 50)
             const data = await sbFetchCombined(currentMode);
-            renderCombinedBoard(board, data, playerNickname);
+            renderCombinedBoard(board, data, playerNickname, playerClass);
 
             const diffLabel = difficulty === 'hard' ? '어려움' : '쉬움';
             if (data && saved) {
                 const myList = difficulty === 'hard' ? data.hard : data.easy;
-                const rank = myList.findIndex(r => r.nickname === playerNickname);
+                const rank = myList.findIndex(r => r.nickname === playerNickname && r.class === playerClass);
                 status.innerText = rank >= 0
                     ? `내 순위: ${diffLabel} ${rank + 1}위 / ${myList.length}명 (상위 50 기준)`
                     : `기록 저장됨 · ${diffLabel} 상위 50위권 밖`;
@@ -2140,14 +2160,20 @@
             const list = document.getElementById('ranking-list');
             list.innerHTML = '<div class="lb-empty">불러오는 중…</div>';
             const data = await sbFetchCombined(rankMode);
-            renderCombinedBoard(list, data, currentPlayer);
+            renderCombinedBoard(list, data, currentPlayer, currentClass);
         }
 
         // ---- 초기화 ----
         document.getElementById('app-version').innerText = `v${APP_VERSION}`;
         loadSettings();
-        // 로그인 상태 복원
-        currentPlayer = localStorage.getItem(PLAYER_KEY) || null;
+        // 로그인 상태 복원 (예전 형식: 문자열만 저장된 경우도 안전하게 무시)
+        try {
+            const saved = JSON.parse(localStorage.getItem(PLAYER_KEY));
+            if (saved && saved.nick && saved.cls) {
+                currentPlayer = saved.nick;
+                currentClass = saved.cls;
+            }
+        } catch (e) { /* 예전 형식이거나 손상된 값은 무시 → 다시 로그인 */ }
         updatePlayerUI();
     </script>
 </body>
