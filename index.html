@@ -452,6 +452,15 @@
             text-align: center;
             max-width: 90vw;
         }
+        .cleanup-box {
+            padding: 2.5rem 1.5rem;
+            min-height: 26rem;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow-y: auto;
+        }
         .qr-img {
             width: 260px;
             max-width: 70vw;
@@ -979,12 +988,12 @@
 
         <!-- 계정 정리 경고 오버레이 (로그인 후 메인 메뉴에서 표시) -->
         <div id="cleanup-warning-overlay">
-            <div class="qr-box">
-                <h3 style="margin-bottom: 0.75rem; color: #dc2626;">⚠️ 계정 정리 안내</h3>
-                <p style="color: var(--text-main); font-size: 0.95rem; margin-bottom: 0.75rem; line-height: 1.6; text-align: left;">
+            <div class="qr-box cleanup-box">
+                <h3 style="margin-bottom: 1.25rem; color: #dc2626;">⚠️ 계정 정리 안내</h3>
+                <p style="color: var(--text-main); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.8; text-align: left;">
                     <b>2026년 7월 8일 21시 00분</b>에 이름을 제대로 설정하지 않은 계정은 삭제돼요.
                 </p>
-                <p style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 1rem; line-height: 1.5; text-align: left;">
+                <p style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 2rem; line-height: 1.8; text-align: left;">
                     삭제 예시: <b>0반0번</b>, <b>0반00</b>, <b>염소</b> 등<br>
                     본인 이름이 이런 형태라면 지금 바로 바꿔주세요!
                 </p>
@@ -1055,7 +1064,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.24.0";
+        const APP_VERSION = "1.24.1";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
