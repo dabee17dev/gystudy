@@ -461,6 +461,51 @@
             justify-content: center;
             overflow-y: auto;
         }
+        .patch-box {
+            width: 100%;
+            max-width: 480px;
+            height: 38rem;
+            max-height: 85vh;
+            padding: 1.75rem;
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+        .patch-list {
+            flex: 1;
+            overflow-y: auto;
+            margin: 0.5rem 0 1rem 0;
+            padding-right: 0.25rem;
+        }
+        .patch-version {
+            margin-bottom: 1.4rem;
+        }
+        .patch-version h4 {
+            color: var(--highlight);
+            font-size: 1.05rem;
+            margin-bottom: 0.2rem;
+        }
+        .patch-version .patch-date {
+            color: var(--text-dim);
+            font-size: 0.75rem;
+            margin-bottom: 0.6rem;
+        }
+        .patch-cat {
+            margin-bottom: 0.5rem;
+        }
+        .patch-cat-label {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--text-muted);
+            margin-bottom: 0.15rem;
+        }
+        .patch-cat ul {
+            margin: 0;
+            padding-left: 1.1rem;
+            color: var(--text-main);
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
         .qr-img {
             width: 260px;
             max-width: 70vw;
@@ -469,8 +514,8 @@
             display: block;
         }
 
-        /* 반 미배정 계정 연결 오버레이 / 계정 정리 경고 / 닉네임 변경 오버레이 (동일 패턴) */
-        #assign-class-overlay, #cleanup-warning-overlay, #rename-overlay {
+        /* 반 미배정 계정 연결 오버레이 / 계정 정리 경고 / 닉네임 변경 / 패치노트 오버레이 (동일 패턴) */
+        #assign-class-overlay, #cleanup-warning-overlay, #rename-overlay, #patchnotes-overlay {
             display: none;
             position: fixed;
             inset: 0;
@@ -898,6 +943,7 @@
             <div class="menu-footer">
                 <div style="display: flex; gap: 0.4rem;">
                     <button class="settings-btn" id="global-settings-btn" title="설정" onclick="showSettings()">⚙️ 설정</button>
+                    <button class="settings-btn" title="패치노트" onclick="showPatchNotes()">📝 패치노트</button>
                     <button class="settings-btn" title="QR 확인" onclick="showQR()">📱 QR</button>
                 </div>
                 <div class="creator-info">by. 청아초 삼다수반 <span class="version-tag" id="app-version"></span></div>
@@ -970,6 +1016,15 @@
                 <h3 style="margin-bottom: 1rem;">📱 QR 코드</h3>
                 <img src="qr.jpg" alt="QR 코드" class="qr-img">
                 <button class="menu-btn" style="margin-top: 1rem;" onclick="hideQR()">닫기</button>
+            </div>
+        </div>
+
+        <!-- 패치노트 Overlay -->
+        <div id="patchnotes-overlay" onclick="hidePatchNotes()">
+            <div class="qr-box patch-box" onclick="event.stopPropagation()">
+                <h3 style="margin-bottom: 0.3rem;">📝 패치노트</h3>
+                <div id="patch-list" class="patch-list"></div>
+                <button class="menu-btn" style="margin: 0;" onclick="hidePatchNotes()">닫기</button>
             </div>
         </div>
 
@@ -1064,7 +1119,132 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.24.1";
+        const APP_VERSION = "1.11.0";
+
+        // ---- 패치노트 ----
+        // 지금까지의 변경 이력을 비슷한 주제끼리 묶어 1.0.0부터 다시 정리한 것.
+        // 마이너 버전 하나 = 한 가지 큰 주제. 그 안에서도 종류별(✨기능/🎨스타일/🐛수정)로 묶는다.
+        const PATCH_NOTES = [
+            {
+                version: "1.11.0", title: "패치노트",
+                groups: [
+                    { cat: "✨ 기능", items: ["패치노트 보기 기능 추가"] },
+                ],
+            },
+            {
+                version: "1.10.0", title: "반(class) 시스템",
+                groups: [
+                    { cat: "✨ 기능", items: [
+                        "로그인에 반 추가 (다른 반 접속 시 랭킹/계정 섞임 방지)",
+                        "정답률 85% 미만은 랭킹에서 제외",
+                        "반이 없는 옛 계정을 로그인 시 반 선택으로 연결",
+                        "계정 정리 경고 안내 및 닉네임 변경 기능 추가",
+                    ]},
+                    { cat: "🎨 스타일", items: ["계정 정리 안내 창을 세로로 늘려 가독성 개선"] },
+                ],
+            },
+            {
+                version: "1.9.0", title: "게임 규칙 고정 & 랭킹 세분화",
+                groups: [
+                    { cat: "✨ 기능", items: [
+                        "카드조합 쉬움 카드 수 축소, 매칭게임 난이도 쉬움 고정, 초성퀴즈 힌트 추가",
+                        "제한시간 100초 고정, 문제 종류(전체/속담/관용어) 선택 추가",
+                        "랭킹을 게임(모드)별로 분리, 힌트 사용 여부 인라인 표시",
+                        "랭킹에 문제 종류 배지 표시",
+                    ]},
+                    { cat: "🎨 스타일", items: [
+                        "카드조합 쉬움 카드 분할 규칙 조정 (1~2단어)",
+                        "타이머를 초 단위로 표시, 2단어 표현은 항상 카드 2장",
+                        "랭킹 난이도 구분 바를 유저 1명이어도 항상 표시",
+                    ]},
+                ],
+            },
+            {
+                version: "1.8.0", title: "점수제 & 랭킹 고도화",
+                groups: [
+                    { cat: "✨ 기능", items: [
+                        "정답 개수 대신 점수 표시 (문제당 10점)",
+                        "랭킹을 아이디별 최고 점수만 표시, 상위 50 스크롤",
+                    ]},
+                    { cat: "🎨 스타일", items: ["랭킹 이름을 가운데 정렬"] },
+                ],
+            },
+            {
+                version: "1.7.0", title: "카드조합 게임 모드",
+                groups: [
+                    { cat: "✨ 기능", items: [
+                        "뜻 보고 표현 / 뜻 적기를 단어 조각 배열(카드조합) 게임으로 변경",
+                        "유사도·별칭으로 맞힌 정답에 근사 정답 안내 문구 표시",
+                    ]},
+                    { cat: "🎨 스타일", items: ["게임 카드 문구를 카드조합 방식에 맞게 변경"] },
+                ],
+            },
+            {
+                version: "1.6.0", title: "채점 정확도 개선",
+                groups: [
+                    { cat: "✨ 기능", items: [
+                        "뜻 보고 표현·초성 퀴즈 정답을 유사도(약 75~80%)로 채점",
+                        "뜻이 같은 다른 표현(동의어)도 정답으로 인정",
+                    ]},
+                    { cat: "🎨 스타일", items: ["이름 4글자 제한, 로그아웃 아이콘화, 메인 부제 문구 정리"] },
+                ],
+            },
+            {
+                version: "1.5.0", title: "UI 리디자인",
+                groups: [
+                    { cat: "✨ 기능", items: [
+                        "메인에서 시간·난이도 선택 후 즉시 시작 + 3-2-1 카운트다운",
+                        "매칭 게임 개명·순서 변경, QR 코드 보기 추가",
+                        "게임 시간을 1~2분으로 축소, 랭킹 시간 선택을 탭 카드로",
+                    ]},
+                    { cat: "🎨 스타일", items: [
+                        "모바일에서 카드를 전체화면으로, 가로 모드 도감 헤더 압축",
+                        "설정/제작자/버전을 카드 내 푸터로, 게임 선택을 2x2 카드로",
+                    ]},
+                ],
+            },
+            {
+                version: "1.4.0", title: "랭킹 시스템 도입",
+                groups: [
+                    { cat: "✨ 기능", items: [
+                        "Supabase 기반 랭킹 시스템 및 닉네임 저장 추가",
+                        "메인 화면 로그인/가입 도입",
+                        "랭킹을 어려움(상위)/쉬움(하위) 한 보드로 통합 표시",
+                    ]},
+                    { cat: "🎨 스타일", items: ["로그인 UI 문구를 닉네임 → 이름으로 변경"] },
+                ],
+            },
+            {
+                version: "1.3.0", title: "게임 방식 개편",
+                groups: [
+                    { cat: "✨ 기능", items: ["문제 수 방식 대신 전체 제한시간 방식으로 게임 개편"] },
+                ],
+            },
+            {
+                version: "1.2.0", title: "콘텐츠 대량 추가",
+                groups: [
+                    { cat: "✨ 기능", items: [
+                        "6학년 교과서 기준 관용표현·속담 220개 이상 추가",
+                        "뜻 적기 문제에 난이도(쉬움/하드) 선택 추가",
+                    ]},
+                    { cat: "🎨 스타일", items: ["도감 모바일 반응형 정리, 도감 번호 우측 정렬"] },
+                ],
+            },
+            {
+                version: "1.1.0", title: "설정 & 반응형",
+                groups: [
+                    { cat: "✨ 기능", items: ["테마 설정을 저장해 다시 열어도 유지"] },
+                    { cat: "🎨 스타일", items: ["모바일 반응형 개선, 환경설정 화면 정리"] },
+                ],
+            },
+            {
+                version: "1.0.0", title: "첫 출시",
+                groups: [
+                    { cat: "✨ 기능", items: ["관용표현 & 속담 퀴즈 앱 출시", "화면에 버전 표시"] },
+                    { cat: "🐛 수정", items: ["중복 관용어 항목 정리"] },
+                ],
+            },
+        ];
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -1785,6 +1965,26 @@
 
         function showQR() { document.getElementById('qr-overlay').style.display = 'flex'; }
         function hideQR() { document.getElementById('qr-overlay').style.display = 'none'; }
+
+        function renderPatchNotes() {
+            const list = document.getElementById('patch-list');
+            list.innerHTML = PATCH_NOTES.map(v => `
+                <div class="patch-version">
+                    <h4>v${v.version} — ${v.title}</h4>
+                    ${v.groups.map(g => `
+                        <div class="patch-cat">
+                            <div class="patch-cat-label">${g.cat}</div>
+                            <ul>${g.items.map(it => `<li>${it}</li>`).join('')}</ul>
+                        </div>
+                    `).join('')}
+                </div>
+            `).join('');
+        }
+        function showPatchNotes() {
+            renderPatchNotes();
+            document.getElementById('patchnotes-overlay').style.display = 'flex';
+        }
+        function hidePatchNotes() { document.getElementById('patchnotes-overlay').style.display = 'none'; }
 
         // ---- 도감(Dictionary) Logic ----
         let currentDictType = '속담'; // 기본값
