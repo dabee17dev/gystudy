@@ -954,7 +954,7 @@
         <div class="container" id="ranking-area" style="height: 55rem; max-height: 90vh; padding: 2.5rem; justify-content: flex-start;">
             <button class="close-btn" onclick="hideRanking()">✕</button>
             <h2 style="font-size: 2rem; margin-bottom: 0.3rem;">🏆 랭킹</h2>
-            <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1.2rem;">게임별로 겨룹니다. <b>어려움</b>이 위, <b>쉬움</b>이 아래.</p>
+            <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1.2rem;">게임별로 겨룹니다. <b>어려움</b>이 위, <b>쉬움</b>이 아래.<br>정답률 <b>85% 미만</b>은 랭킹에 등록되지 않아요.</p>
             <div class="dict-tabs rank-tabs" style="margin-bottom: 1rem;">
                 <div class="dict-tab rank-tab active" id="rmtab-1" onclick="selectRankMode(1)">표현맞추기</div>
                 <div class="dict-tab rank-tab" id="rmtab-4" onclick="selectRankMode(4)">뜻맞추기</div>
@@ -1119,12 +1119,18 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.11.0";
+        const APP_VERSION = "1.11.1";
 
         // ---- 패치노트 ----
         // 지금까지의 변경 이력을 비슷한 주제끼리 묶어 1.0.0부터 다시 정리한 것.
         // 마이너 버전 하나 = 한 가지 큰 주제. 그 안에서도 종류별(✨기능/🎨스타일/🐛수정)로 묶는다.
         const PATCH_NOTES = [
+            {
+                version: "1.11.1", title: "패치노트",
+                groups: [
+                    { cat: "🎨 스타일", items: ["랭킹에 정답률 85% 미만은 등록되지 않는다는 안내 문구 추가"] },
+                ],
+            },
             {
                 version: "1.11.0", title: "패치노트",
                 groups: [
