@@ -460,8 +460,8 @@
             display: block;
         }
 
-        /* 반 미배정 계정 연결 오버레이 */
-        #assign-class-overlay {
+        /* 반 미배정 계정 연결 오버레이 / 계정 정리 경고 / 닉네임 변경 오버레이 (동일 패턴) */
+        #assign-class-overlay, #cleanup-warning-overlay, #rename-overlay {
             display: none;
             position: fixed;
             inset: 0;
@@ -977,6 +977,36 @@
             </div>
         </div>
 
+        <!-- 계정 정리 경고 오버레이 (로그인 후 메인 메뉴에서 표시) -->
+        <div id="cleanup-warning-overlay">
+            <div class="qr-box">
+                <h3 style="margin-bottom: 0.75rem; color: #dc2626;">⚠️ 계정 정리 안내</h3>
+                <p style="color: var(--text-main); font-size: 0.95rem; margin-bottom: 0.75rem; line-height: 1.6; text-align: left;">
+                    <b>2026년 7월 8일 21시 00분</b>에 이름을 제대로 설정하지 않은 계정은 삭제돼요.
+                </p>
+                <p style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 1rem; line-height: 1.5; text-align: left;">
+                    삭제 예시: <b>0반0번</b>, <b>0반00</b>, <b>염소</b> 등<br>
+                    본인 이름이 이런 형태라면 지금 바로 바꿔주세요!
+                </p>
+                <button class="menu-btn" style="background: var(--highlight); color: #fff; border: none; font-weight: bold; margin: 0 0 0.5rem 0;" onclick="hideCleanupWarning(); showRenameOverlay();">✏️ 닉네임 변경하기</button>
+                <button class="menu-btn" style="margin: 0;" onclick="hideCleanupWarning()">닫기</button>
+            </div>
+        </div>
+
+        <!-- 닉네임 변경 오버레이 -->
+        <div id="rename-overlay">
+            <div class="qr-box">
+                <h3 style="margin-bottom: 0.5rem;">✏️ 닉네임 변경</h3>
+                <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1rem;">
+                    현재: <b id="rename-current"></b>
+                </p>
+                <input type="text" id="rename-input" class="input-box" maxlength="4" placeholder="새 닉네임 (최대 4글자)" style="margin: 0 0 0.75rem 0;" onkeypress="if(event.key==='Enter') confirmRename()">
+                <div id="rename-msg" style="min-height: 1.2rem; font-size: 0.85rem; margin-bottom: 0.75rem;"></div>
+                <button class="menu-btn" style="background: var(--highlight); color: #fff; border: none; font-weight: bold; margin: 0 0 0.5rem 0;" onclick="confirmRename()">변경하기</button>
+                <button class="menu-btn" style="margin: 0;" onclick="hideRenameOverlay()">취소</button>
+            </div>
+        </div>
+
         <!-- Game Area -->
         <div class="container" id="game-area">
             <button class="close-btn" title="게임 종료" onclick="goHome()">✖</button>
@@ -1025,7 +1055,7 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.23.0";
+        const APP_VERSION = "1.24.0";
 
         const DB = [
             // 관용어 (음슴체 및 간소화)
@@ -1497,6 +1527,30 @@
             } catch (e) { console.warn('[플레이어] 반 배정 실패:', e.message); return false; }
         }
 
+        // 닉네임 변경 (같은 반 안에서만). 계정(players) 변경이 핵심이라 실제 반영 행을 확인.
+        // 점수 기록(scores) 이름 변경은 부수 효과라 실패해도 계정 변경 자체는 성공으로 처리.
+        async function sbRenamePlayer(oldNick, cls, newNick) {
+            if (!SB_ENABLED) return false;
+            try {
+                const res = await fetch(`${SB_URL}/rest/v1/players?nickname=eq.${encodeURIComponent(oldNick)}&class=eq.${cls}`, {
+                    method: 'PATCH',
+                    headers: { ...SB_HEADERS, 'Prefer': 'return=representation' },
+                    body: JSON.stringify({ nickname: newNick })
+                });
+                if (!res.ok) throw new Error(`rename ${res.status}`);
+                const rows = await res.json();
+                if (rows.length === 0) return false;
+
+                fetch(`${SB_URL}/rest/v1/scores?nickname=eq.${encodeURIComponent(oldNick)}&class=eq.${cls}`, {
+                    method: 'PATCH',
+                    headers: { ...SB_HEADERS, 'Prefer': 'return=minimal' },
+                    body: JSON.stringify({ nickname: newNick })
+                }).catch(e => console.warn('[점수기록] 이름 변경 실패(무시):', e.message));
+
+                return true;
+            } catch (e) { console.warn('[플레이어] 이름 변경 실패:', e.message); return false; }
+        }
+
         // 플레이어 신규 등록 (성공 true, 중복이면 409)
         async function sbRegisterPlayer(nick, cls) {
             if (!SB_ENABLED) return false;
@@ -1555,6 +1609,7 @@
             msg.innerText = kind === 'signup' ? `가입 완료! 환영합니다, ${cls}반 ${nick}님 🎉`
                           : kind === 'login'  ? `${cls}반 ${nick}님 로그인 완료 👋`
                           : `${cls}반 ${nick}님으로 시작합니다.`;
+            showCleanupWarning();
         }
 
         // ---- 반 미배정 계정 연결 오버레이 ----
@@ -1589,6 +1644,50 @@
             const loginMsg = document.getElementById('login-msg');
             loginMsg.style.color = '#16a34a';
             loginMsg.innerText = `반 등록 완료! ${cls}반 ${nick}님 환영합니다 🎉`;
+            showCleanupWarning();
+        }
+
+        // ---- 계정 정리 경고 ----
+        function showCleanupWarning() {
+            document.getElementById('cleanup-warning-overlay').style.display = 'flex';
+        }
+        function hideCleanupWarning() {
+            document.getElementById('cleanup-warning-overlay').style.display = 'none';
+        }
+
+        // ---- 닉네임 변경 ----
+        function showRenameOverlay() {
+            document.getElementById('rename-current').innerText = `${currentClass}반 ${currentPlayer}`;
+            document.getElementById('rename-input').value = '';
+            document.getElementById('rename-msg').innerText = '';
+            document.getElementById('rename-overlay').style.display = 'flex';
+        }
+        function hideRenameOverlay() {
+            document.getElementById('rename-overlay').style.display = 'none';
+        }
+
+        async function confirmRename() {
+            const msg = document.getElementById('rename-msg');
+            const newNick = document.getElementById('rename-input').value.trim().replace(/\s+/g, ' ').slice(0, 4);
+            if (!newNick) { msg.style.color = '#dc2626'; msg.innerText = '이름을 입력하세요.'; return; }
+            if (newNick === currentPlayer) { msg.style.color = '#dc2626'; msg.innerText = '지금 이름과 같아요.'; return; }
+
+            msg.style.color = 'var(--text-dim)';
+            msg.innerText = '확인 중…';
+
+            const dup = await sbFindPlayer(newNick, currentClass);
+            if (dup) { msg.style.color = '#dc2626'; msg.innerText = '이미 같은 반에 있는 이름이에요.'; return; }
+
+            msg.innerText = '변경 중…';
+            const oldNick = currentPlayer;
+            const ok = await sbRenamePlayer(oldNick, currentClass, newNick);
+            if (!ok) { msg.style.color = '#dc2626'; msg.innerText = '변경에 실패했어요. 다시 시도해주세요.'; return; }
+
+            setCurrentPlayer(newNick, currentClass);
+            hideRenameOverlay();
+            const loginMsg = document.getElementById('login-msg');
+            loginMsg.style.color = '#16a34a';
+            loginMsg.innerText = `닉네임을 "${newNick}"(으)로 바꿨어요! 🎉`;
         }
 
         function setCurrentPlayer(nick, cls) {
@@ -2282,6 +2381,7 @@
             }
         } catch (e) { /* 예전 형식이거나 손상된 값은 무시 → 다시 로그인 */ }
         updatePlayerUI();
+        if (currentPlayer) showCleanupWarning();
     </script>
 </body>
 </html>

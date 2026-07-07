@@ -17,13 +17,13 @@ alter table public.players enable row level security;
 drop policy if exists "public read players"   on public.players;
 drop policy if exists "public insert players" on public.players;
 drop policy if exists "assign class to unassigned players" on public.players;
+drop policy if exists "public update players" on public.players;
 create policy "public read players"   on public.players for select using (true);
 create policy "public insert players" on public.players for insert with check (true);
--- 반이 아직 없는(null) 계정에 한해서만 반 배정을 위한 수정 허용 (이미 반이 있는 계정은 수정 불가 → 탈취 방지)
-create policy "assign class to unassigned players"
-    on public.players for update
-    using (class is null)
-    with check (true);
+-- 반 배정(class 채우기)과 닉네임 변경 모두를 위해 수정을 허용합니다.
+-- 참고: 이 앱은 비밀번호 없는 신뢰 기반 로그인이라(누구나 이름+반만 알면 로그인 가능),
+--       수정 권한을 더 세밀히 제한해도 실질적인 보안 향상은 크지 않습니다. (교실 내 사용 전제)
+create policy "public update players" on public.players for update using (true) with check (true);
 
 -- 1) 점수(게임 결과) 테이블
 create table if not exists public.scores (
@@ -54,6 +54,7 @@ alter table public.scores enable row level security;
 
 drop policy if exists "public read scores"   on public.scores;
 drop policy if exists "public insert scores" on public.scores;
+drop policy if exists "public update scores nickname" on public.scores;
 
 create policy "public read scores"
     on public.scores for select
@@ -63,10 +64,15 @@ create policy "public insert scores"
     on public.scores for insert
     with check (true);
 
--- 참고: 수정/삭제(update/delete) 정책은 일부러 열지 않았습니다.
---       (누구나 남의 기록을 지우거나 조작하는 것을 막기 위함)
+-- 닉네임 변경 시 과거 점수 기록도 새 이름으로 따라가도록 수정만 허용 (삭제는 계속 막아둠)
+create policy "public update scores nickname"
+    on public.scores for update
+    using (true)
+    with check (true);
+
+-- 참고: 삭제(delete) 정책은 일부러 열지 않았습니다.
+--       (누구나 남의 기록을 지우는 것을 막기 위함)
 --       필요하면 아래 주석을 해제하세요. (권장하지 않음)
--- create policy "public update scores" on public.scores for update using (true) with check (true);
 -- create policy "public delete scores" on public.scores for delete using (true);
 
 -- 4) 마이그레이션: 기존 테이블이 이미 있다면(solved=정답 개수 시절 제약) 아래를 실행해
@@ -106,10 +112,20 @@ alter table public.scores add column if not exists class int;
 update public.players set class = 5 where class is null and nickname like '5반%';
 update public.scores  set class = 5 where class is null and nickname like '5반%';
 
--- 9) 마이그레이션: 반 미배정 계정을 로그인 시 반을 선택해 연결할 수 있게 하는 정책.
---    class가 null인 행만 수정 허용(이미 반이 배정된 계정은 수정 불가 → 탈취 방지).
+-- 9) 마이그레이션(대체됨 → 10번 참고): 반 미배정 계정을 로그인 시 반을 선택해 연결할 수 있게 하는 정책.
+--    (처음엔 class가 null인 행만 수정 허용했으나, 아래 10번에서 닉네임 변경 기능을 위해
+--     이미 반이 배정된 계정도 수정할 수 있도록 넓혔습니다. 10번만 실행해도 충분합니다.)
 drop policy if exists "assign class to unassigned players" on public.players;
-create policy "assign class to unassigned players"
-    on public.players for update
-    using (class is null)
+
+-- 10) 마이그레이션(중요): 닉네임 변경 기능 추가.
+--     - players: 반 배정 + 닉네임 변경을 모두 위해 수정 정책을 전체 허용으로 넓힙니다.
+--       (이 앱은 비밀번호 없는 신뢰 기반 로그인이라 더 세밀히 제한해도 실질 보안 향상은 적습니다.)
+--     - scores: 닉네임 변경 시 과거 점수 기록도 새 이름을 따라가도록 수정을 허용합니다(삭제는 계속 막음).
+drop policy if exists "public update players" on public.players;
+create policy "public update players" on public.players for update using (true) with check (true);
+
+drop policy if exists "public update scores nickname" on public.scores;
+create policy "public update scores nickname"
+    on public.scores for update
+    using (true)
     with check (true);
