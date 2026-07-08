@@ -1046,7 +1046,7 @@
             <div class="qr-box cleanup-box">
                 <h3 style="margin-bottom: 1.25rem; color: #dc2626;">⚠️ 계정 정리 안내</h3>
                 <p style="color: var(--text-main); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.8; text-align: left;">
-                    <b>2026년 7월 8일 21시 00분</b>에 이름을 제대로 설정하지 않은 계정은 삭제돼요.
+                    <b>2026년 7월 10일 21시 00분</b>에 이름을 제대로 설정하지 않은 계정은 삭제돼요.
                 </p>
                 <p style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 2rem; line-height: 1.8; text-align: left;">
                     삭제 예시: <b>0반0번</b>, <b>0반00</b>, <b>염소</b> 등<br>
@@ -1119,12 +1119,18 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.11.1";
+        const APP_VERSION = "1.11.2";
 
         // ---- 패치노트 ----
         // 지금까지의 변경 이력을 비슷한 주제끼리 묶어 1.0.0부터 다시 정리한 것.
         // 마이너 버전 하나 = 한 가지 큰 주제. 그 안에서도 종류별(✨기능/🎨스타일/🐛수정)로 묶는다.
         const PATCH_NOTES = [
+            {
+                version: "1.11.2", title: "패치노트",
+                groups: [
+                    { cat: "🎨 스타일", items: ["계정 정리 안내 삭제 예정일을 7월 10일로 변경"] },
+                ],
+            },
             {
                 version: "1.11.1", title: "패치노트",
                 groups: [
