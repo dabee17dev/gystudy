@@ -41,7 +41,7 @@
             --text-main: #ffffff;
             --text-muted: #888;
             --text-dim: #666;
-            --highlight: #f3ec78;
+            --highlight: #fb923c;
         }
 
         * {
@@ -124,7 +124,7 @@
         }
         
         [data-theme="dark"] h1 {
-            background: -webkit-linear-gradient(45deg, #f3ec78, #af4261);
+            background: -webkit-linear-gradient(45deg, #fb923c, #af4261);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -1260,12 +1260,18 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.15.2";
+        const APP_VERSION = "1.15.3";
 
         // ---- 패치노트 ----
         // 지금까지의 변경 이력을 비슷한 주제끼리 묶어 1.0.0부터 다시 정리한 것.
         // 마이너 버전 하나 = 한 가지 큰 주제. 그 안에서도 종류별(✨기능/🎨스타일/🐛수정)로 묶는다.
         const PATCH_NOTES = [
+            {
+                version: "1.15.3", title: "명예의전당 개편",
+                groups: [
+                    { cat: "🎨 스타일", items: ["다크 모드의 노란색 강조색을 라이트 모드처럼 주황색으로 통일"] },
+                ],
+            },
             {
                 version: "1.15.2", title: "명예의전당 개편",
                 groups: [
