@@ -783,6 +783,61 @@
             border-bottom: 1px solid var(--border-color);
         }
 
+        /* 명예의 전당: 게임·난이도별 1~3위 (1위 맨 위 → 2위 → 3위 순으로 쌓임) */
+        .hof-group { margin-bottom: 1.2rem; }
+        .hof-group-title {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            margin-bottom: 0.4rem;
+        }
+        .hof-emoji { font-size: 1.05rem; }
+        .hof-diff-badge {
+            margin-left: auto;
+            font-size: 0.68rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 999px;
+            color: #fff;
+        }
+        .hof-diff-badge.hard { background: #dc2626; }
+        .hof-diff-badge.easy { background: #2563eb; }
+        .hof-podium {
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .hof-row {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.55rem 0.9rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .hof-row:last-child { border-bottom: none; }
+        .hof-row.rank1 { background: color-mix(in srgb, #f59e0b 20%, transparent); }
+        .hof-row.rank2 { background: color-mix(in srgb, #94a3b8 16%, transparent); }
+        .hof-row.rank3 { background: color-mix(in srgb, #b45309 14%, transparent); }
+        .hof-medal { font-size: 1.25rem; width: 1.8rem; text-align: center; flex-shrink: 0; }
+        .hof-row.rank1 .hof-medal { font-size: 1.5rem; }
+        .hof-name {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-weight: 700;
+            color: var(--text-main);
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .hof-row.rank1 .hof-name { font-size: 1.05rem; }
+        .hof-score { font-weight: 800; color: var(--highlight); flex-shrink: 0; }
+        .hof-empty { padding: 0.8rem; text-align: center; color: var(--text-dim); font-size: 0.85rem; }
+
         /* 초성 퀴즈 힌트 */
         #hint-row {
             display: flex;
@@ -994,6 +1049,7 @@
             <h2 style="font-size: 2rem; margin-bottom: 0.3rem;">🏆 랭킹</h2>
             <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1.2rem;"><b>매주 금요일 00시</b>에 랭킹이 초기화 됩니다.<br>정답률 <b>85% 미만</b>은 랭킹에 등록되지 않아요.</p>
             <div class="dict-tabs rank-tabs" style="margin-bottom: 1rem;">
+                <div class="dict-tab rank-tab" id="rmtab-hof" onclick="selectRankMode('hof')">🏆 명예의전당</div>
                 <div class="dict-tab rank-tab active" id="rmtab-1" onclick="selectRankMode(1)">표현맞추기</div>
                 <div class="dict-tab rank-tab" id="rmtab-4" onclick="selectRankMode(4)">뜻맞추기</div>
                 <div class="dict-tab rank-tab" id="rmtab-3" onclick="selectRankMode(3)">초성퀴즈</div>
@@ -1157,12 +1213,21 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.13.0";
+        const APP_VERSION = "1.14.0";
 
         // ---- 패치노트 ----
         // 지금까지의 변경 이력을 비슷한 주제끼리 묶어 1.0.0부터 다시 정리한 것.
         // 마이너 버전 하나 = 한 가지 큰 주제. 그 안에서도 종류별(✨기능/🎨스타일/🐛수정)로 묶는다.
         const PATCH_NOTES = [
+            {
+                version: "1.14.0", title: "랭킹 명예의 전당",
+                groups: [
+                    { cat: "✨ 기능", items: [
+                        "랭킹에 명예의전당 탭 추가: 게임·난이도별 1~3위를 한 화면에 표시",
+                        "1위는 맨 위, 2위는 가운데, 3위는 그 아래 순으로 배치, 게임별 아이콘으로 구분",
+                    ]},
+                ],
+            },
             {
                 version: "1.13.0", title: "카드조합 드래그 반응형 개선",
                 groups: [
@@ -2769,14 +2834,15 @@
             selectRankMode(rankMode);
         }
 
-        // 탭으로 게임(모드) 선택 → 해당 랭킹 표시
+        // 탭으로 게임(모드) 선택 → 해당 랭킹 표시 (모드 번호 또는 'hof'=명예의전당)
         function selectRankMode(m) {
             rankMode = m;
+            document.getElementById('rmtab-hof').className = m === 'hof' ? 'dict-tab rank-tab active' : 'dict-tab rank-tab';
             document.getElementById('rmtab-1').className = m === 1 ? 'dict-tab rank-tab active' : 'dict-tab rank-tab';
             document.getElementById('rmtab-4').className = m === 4 ? 'dict-tab rank-tab active' : 'dict-tab rank-tab';
             document.getElementById('rmtab-3').className = m === 3 ? 'dict-tab rank-tab active' : 'dict-tab rank-tab';
             document.getElementById('rmtab-2').className = m === 2 ? 'dict-tab rank-tab active' : 'dict-tab rank-tab';
-            loadRanking();
+            if (m === 'hof') loadHallOfFame(); else loadRanking();
         }
 
         function hideRanking() {
@@ -2790,6 +2856,72 @@
             list.innerHTML = '<div class="lb-empty">불러오는 중…</div>';
             const data = await sbFetchCombined(rankMode);
             renderCombinedBoard(list, data, currentPlayer, currentClass);
+        }
+
+        // ---- 명예의 전당: 게임(모드)·난이도별 현재 랭킹 1~3위 ----
+        const HOF_MODE_ORDER = [1, 4, 3, 2];
+        const HOF_MODE_INFO = {
+            1: { emoji: '💡', label: '관용 표현 맞추기' },
+            4: { emoji: '✍️', label: '뜻 맞추기' },
+            3: { emoji: '🔤', label: '초성 퀴즈' },
+            2: { emoji: '📖', label: '매칭 게임' },
+        };
+
+        async function sbFetchHallOfFame() {
+            if (!SB_ENABLED) return null;
+            const entries = await Promise.all(HOF_MODE_ORDER.map(async mode => {
+                const [hard, easy] = await Promise.all([
+                    sbFetchByDiff(mode, 'hard', 3),
+                    sbFetchByDiff(mode, 'easy', 3)
+                ]);
+                return [mode, { hard: hard || [], easy: easy || [] }];
+            }));
+            return Object.fromEntries(entries);
+        }
+
+        async function loadHallOfFame() {
+            const list = document.getElementById('ranking-list');
+            list.innerHTML = '<div class="lb-empty">불러오는 중…</div>';
+            const data = await sbFetchHallOfFame();
+            renderHallOfFame(list, data);
+        }
+
+        // 게임·난이도별로 1위는 맨 위, 2위는 가운데, 3위는 그 아래 순서로 쌓아 보여줌
+        function renderHallOfFame(container, dataByMode) {
+            if (!SB_ENABLED) {
+                container.innerHTML = '<div class="lb-empty">랭킹 서버가 설정되지 않았습니다.<br>(.env.local 확인)</div>';
+                return;
+            }
+            if (dataByMode === null) {
+                container.innerHTML = '<div class="lb-empty">랭킹을 불러오지 못했습니다.<br>네트워크나 테이블 설정을 확인하세요.</div>';
+                return;
+            }
+            const row = (r, rank) => {
+                const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉';
+                const classLabel = r.class ? `${r.class}반` : '미배정';
+                return `<div class="hof-row rank${rank}">
+                    <div class="hof-medal">${medal}</div>
+                    <div class="hof-name">${escapeHtml(r.nickname)}<span class="lb-badge cls">${classLabel}</span></div>
+                    <div class="hof-score">${r.solved}점</div>
+                </div>`;
+            };
+            let html = '';
+            HOF_MODE_ORDER.forEach(mode => {
+                const info = HOF_MODE_INFO[mode];
+                ['hard', 'easy'].forEach(diff => {
+                    const rows = (dataByMode[mode] && dataByMode[mode][diff]) || [];
+                    html += `<div class="hof-group">
+                        <div class="hof-group-title">
+                            <span class="hof-emoji">${info.emoji}</span>${info.label}
+                            <span class="hof-diff-badge ${diff}">${diff === 'hard' ? '어려움' : '쉬움'}</span>
+                        </div>
+                        <div class="hof-podium">${rows.length
+                            ? rows.slice(0, 3).map((r, i) => row(r, i + 1)).join('')
+                            : '<div class="hof-empty">아직 기록이 없어요</div>'}</div>
+                    </div>`;
+                });
+            });
+            container.innerHTML = html;
         }
 
         // ---- 초기화 ----
