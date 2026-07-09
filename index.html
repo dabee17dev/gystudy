@@ -686,8 +686,10 @@
             overflow: hidden;
         }
         .lb-row {
+            position: relative;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             padding: 0.7rem 0.9rem;
             border-bottom: 1px solid var(--border-color);
             font-size: 0.95rem;
@@ -699,9 +701,9 @@
         .lb-left {
             display: flex;
             align-items: center;
-            width: 7.2rem;
             flex-shrink: 0;
-            overflow: hidden;
+            position: relative;
+            z-index: 1;
         }
         .lb-rank {
             width: 2.4rem;
@@ -712,20 +714,29 @@
             flex-shrink: 0;
         }
         .lb-rank.medal { color: var(--highlight); }
+        /* 배지 길이와 무관하게 이름을 행 전체 기준 정가운데에 배치 (겹치지 않도록 좌우에 여백 확보) */
         .lb-name {
-            flex: 1;
+            position: absolute;
+            left: 5.5rem;
+            right: 5.5rem;
+            top: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-weight: 600;
             color: var(--text-main);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            text-align: center;
-            padding-right: 0.5rem;
+            pointer-events: none;
         }
         .lb-right {
             display: flex;
             align-items: center;
             flex-shrink: 0;
+            position: relative;
+            z-index: 1;
         }
         .lb-solved {
             font-weight: 700;
@@ -1130,12 +1141,18 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.12.0";
+        const APP_VERSION = "1.12.1";
 
         // ---- 패치노트 ----
         // 지금까지의 변경 이력을 비슷한 주제끼리 묶어 1.0.0부터 다시 정리한 것.
         // 마이너 버전 하나 = 한 가지 큰 주제. 그 안에서도 종류별(✨기능/🎨스타일/🐛수정)로 묶는다.
         const PATCH_NOTES = [
+            {
+                version: "1.12.1", title: "카드조합 조작성 개선",
+                groups: [
+                    { cat: "🐛 수정", items: ["랭킹의 반 배지가 이름 정렬 때문에 잘리던 문제 수정"] },
+                ],
+            },
             {
                 version: "1.12.0", title: "카드조합 조작성 개선",
                 groups: [
