@@ -1260,12 +1260,18 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.15.4";
+        const APP_VERSION = "1.16.0";
 
         // ---- 패치노트 ----
         // 지금까지의 변경 이력을 비슷한 주제끼리 묶어 1.0.0부터 다시 정리한 것.
         // 마이너 버전 하나 = 한 가지 큰 주제. 그 안에서도 종류별(✨기능/🎨스타일/🐛수정)로 묶는다.
         const PATCH_NOTES = [
+            {
+                version: "1.16.0", title: "랭킹 주간 초기화 적용",
+                groups: [
+                    { cat: "✨ 기능", items: ["일반 랭킹 탭(표현맞추기·뜻맞추기·초성퀴즈·매칭게임)도 매주 금요일 00시 기준으로 이번 주 기록만 집계 (DB는 삭제하지 않고 집계 범위만 적용)"] },
+                ],
+            },
             {
                 version: "1.15.4", title: "명예의전당 개편",
                 groups: [
@@ -1866,12 +1872,24 @@
             } catch (e) { console.warn('[랭킹] 조회 실패:', e.message); return null; }
         }
 
+        // 매주 금요일 00시 기준, 지금 진행 중인 주의 [시작, 끝) 범위. 랭킹 "초기화"는 이 시작 시각 이전 기록을
+        // 지우는 게 아니라 집계 범위에서만 제외하는 방식으로 구현한다 (DB는 그대로 둠).
+        function getCurrentWeekRange() {
+            const now = new Date();
+            const daysSinceFriday = (now.getDay() - 5 + 7) % 7; // Fri=5
+            const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysSinceFriday);
+            const end = new Date(start);
+            end.setDate(end.getDate() + 7);
+            return { start, end };
+        }
+
         // 어려움(상위) + 쉬움(하위) 통합 조회 → { hard:[...], easy:[...] } (실패 시 null), 게임(mode)별로 구분
-        async function sbFetchCombined(mode, perDiff = 50) {
+        // week를 넘기지 않으면 이번 주(매주 금요일 00시 초기화 기준) 기록만 집계한다.
+        async function sbFetchCombined(mode, perDiff = 50, week = getCurrentWeekRange()) {
             if (!SB_ENABLED) return null;
             const [hard, easy] = await Promise.all([
-                sbFetchByDiff(mode, 'hard', perDiff),
-                sbFetchByDiff(mode, 'easy', perDiff)
+                sbFetchByDiff(mode, 'hard', perDiff, week),
+                sbFetchByDiff(mode, 'easy', perDiff, week)
             ]);
             if (hard === null && easy === null) return null;
             return { hard: hard || [], easy: easy || [] };
