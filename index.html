@@ -579,6 +579,40 @@
             background: var(--text-main);
             color: var(--bg-container);
         }
+        /* 명예의전당: 게임 4개 탭과 분리해 전체 폭 한 줄로 표시 */
+        .hof-tab-full {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0.7rem;
+            margin-bottom: 0.75rem;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .hof-tab-full.active {
+            background: var(--text-main);
+            color: var(--bg-container);
+            border-color: var(--text-main);
+        }
+        .hof-week-select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0.6rem 0.8rem;
+            margin-bottom: 0.75rem;
+            background: var(--bg-input);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
 
         /* Search */
         .dict-search {
@@ -1051,13 +1085,14 @@
             <button class="close-btn" onclick="hideRanking()">✕</button>
             <h2 style="font-size: 2rem; margin-bottom: 0.3rem;">🏆 랭킹</h2>
             <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 1.2rem;"><b>매주 금요일 00시</b>에 랭킹이 초기화 됩니다.<br>정답률 <b>85% 미만</b>은 랭킹에 등록되지 않아요.</p>
-            <div class="dict-tabs rank-tabs" style="margin-bottom: 1rem;">
-                <div class="dict-tab rank-tab" id="rmtab-hof" onclick="selectRankMode('hof')">🏆 명예의전당</div>
+            <div class="dict-tabs rank-tabs" style="margin-bottom: 0.6rem;">
                 <div class="dict-tab rank-tab active" id="rmtab-1" onclick="selectRankMode(1)">표현맞추기</div>
                 <div class="dict-tab rank-tab" id="rmtab-4" onclick="selectRankMode(4)">뜻맞추기</div>
                 <div class="dict-tab rank-tab" id="rmtab-3" onclick="selectRankMode(3)">초성퀴즈</div>
                 <div class="dict-tab rank-tab" id="rmtab-2" onclick="selectRankMode(2)">매칭게임</div>
             </div>
+            <button type="button" class="hof-tab-full" id="rmtab-hof" onclick="selectRankMode('hof')">🏆 명예의전당</button>
+            <select id="hof-week-select" class="hof-week-select" style="display: none;" onchange="onHofWeekChange()"></select>
             <div id="ranking-list" class="leaderboard" style="flex: 1; overflow-y: auto;">
                 <div class="lb-empty">불러오는 중…</div>
             </div>
@@ -1216,12 +1251,21 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.14.1";
+        const APP_VERSION = "1.15.0";
 
         // ---- 패치노트 ----
         // 지금까지의 변경 이력을 비슷한 주제끼리 묶어 1.0.0부터 다시 정리한 것.
         // 마이너 버전 하나 = 한 가지 큰 주제. 그 안에서도 종류별(✨기능/🎨스타일/🐛수정)로 묶는다.
         const PATCH_NOTES = [
+            {
+                version: "1.15.0", title: "명예의전당 개편",
+                groups: [
+                    { cat: "✨ 기능", items: [
+                        "명예의전당을 게임 4개 탭과 분리해 전체 폭 한 줄로 배치",
+                        "명예의전당에 M월 N주차 선택 기능 추가 (매주 금요일 초기화 기준, 기본값은 최근 주차)",
+                    ]},
+                ],
+            },
             {
                 version: "1.14.1", title: "카드조합 화면 가독성 개선",
                 groups: [
@@ -1758,14 +1802,17 @@
         }
 
         // 난이도별(모드 무관) 상위 조회 — 같은 제한시간끼리, 맞힌 개수 desc
-        async function sbFetchByDiff(mode, difficulty, limit = 50) {
+        async function sbFetchByDiff(mode, difficulty, limit = 50, week = null) {
             if (!SB_ENABLED) return null;
             try {
                 // 정답률 85% 미만은 랭킹에서 제외(기존에 저장된 기록도 동일하게 적용)
                 // 넉넉히 받아와 (반+이름)별 최고 기록만 남긴 뒤 상위 N개
-                const q = `mode=eq.${mode}&difficulty=eq.${difficulty}&accuracy=gte.${RANK_ACCURACY_MIN}` +
-                          `&select=id,nickname,solved,accuracy,difficulty,category,class` +
-                          `&order=solved.desc,accuracy.desc,created_at.asc&limit=1000`;
+                let q = `mode=eq.${mode}&difficulty=eq.${difficulty}&accuracy=gte.${RANK_ACCURACY_MIN}`;
+                if (week) {
+                    q += `&created_at=gte.${week.start.toISOString()}&created_at=lt.${week.end.toISOString()}`;
+                }
+                q += `&select=id,nickname,solved,accuracy,difficulty,category,class` +
+                     `&order=solved.desc,accuracy.desc,created_at.asc&limit=1000`;
                 const res = await fetch(`${SB_URL}/rest/v1/scores?${q}`, { headers: SB_HEADERS });
                 if (!res.ok) throw new Error(`select ${res.status}`);
                 const rows = await res.json();
@@ -2836,24 +2883,26 @@
         }
 
         // ---- 랭킹 패널 ----
-        let rankMode = 1; // 선택된 랭킹 게임(모드): 1|2|3|4
+        let rankMode = 1; // 선택된 랭킹 게임(모드): 1|2|3|4|'hof'
 
         function showRanking() {
             document.getElementById('main-menu').style.display = 'none';
             document.getElementById('global-settings-btn').style.display = 'none';
             document.getElementById('ranking-area').style.display = 'flex';
             document.getElementById('ranking-area').style.flexDirection = 'column';
+            hofWeekIndex = 0; // 랭킹 창을 열 때마다 명예의전당은 기본값(최근 주차)으로
             selectRankMode(rankMode);
         }
 
         // 탭으로 게임(모드) 선택 → 해당 랭킹 표시 (모드 번호 또는 'hof'=명예의전당)
         function selectRankMode(m) {
             rankMode = m;
-            document.getElementById('rmtab-hof').className = m === 'hof' ? 'dict-tab rank-tab active' : 'dict-tab rank-tab';
+            document.getElementById('rmtab-hof').className = m === 'hof' ? 'hof-tab-full active' : 'hof-tab-full';
             document.getElementById('rmtab-1').className = m === 1 ? 'dict-tab rank-tab active' : 'dict-tab rank-tab';
             document.getElementById('rmtab-4').className = m === 4 ? 'dict-tab rank-tab active' : 'dict-tab rank-tab';
             document.getElementById('rmtab-3').className = m === 3 ? 'dict-tab rank-tab active' : 'dict-tab rank-tab';
             document.getElementById('rmtab-2').className = m === 2 ? 'dict-tab rank-tab active' : 'dict-tab rank-tab';
+            document.getElementById('hof-week-select').style.display = m === 'hof' ? 'block' : 'none';
             if (m === 'hof') loadHallOfFame(); else loadRanking();
         }
 
@@ -2870,7 +2919,7 @@
             renderCombinedBoard(list, data, currentPlayer, currentClass);
         }
 
-        // ---- 명예의 전당: 게임(모드)·난이도별 현재 랭킹 1~3위 ----
+        // ---- 명예의 전당: 게임(모드)·난이도별, 선택한 주차의 랭킹 1~3위 ----
         const HOF_MODE_ORDER = [1, 4, 3, 2];
         const HOF_MODE_INFO = {
             1: { emoji: '💡', label: '관용 표현 맞추기' },
@@ -2879,12 +2928,55 @@
             2: { emoji: '📖', label: '매칭 게임' },
         };
 
-        async function sbFetchHallOfFame() {
+        // 매주 금요일 00시 초기화 기준으로 주차를 나눔. index 0 = 이번 주(진행 중, 최근 주차)
+        let hofWeeks = [];
+        let hofWeekIndex = 0;
+
+        function buildHofWeeks(count = 8) {
+            const now = new Date();
+            const daysSinceFriday = (now.getDay() - 5 + 7) % 7; // Fri=5
+            const currentStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysSinceFriday);
+            const weeks = [];
+            for (let i = 0; i < count; i++) {
+                const start = new Date(currentStart);
+                start.setDate(start.getDate() - 7 * i);
+                const end = new Date(start);
+                end.setDate(end.getDate() + 7);
+                weeks.push({ start, end, label: hofWeekLabel(start) });
+            }
+            return weeks;
+        }
+
+        // "M월 N주차" — 그 달의 몇 번째 금요일에 시작하는 주인지로 표기 (금요일 초기화 기준과 일치)
+        function hofWeekLabel(start) {
+            let n = 0;
+            const cur = new Date(start.getFullYear(), start.getMonth(), 1);
+            while (cur <= start) {
+                if (cur.getDay() === 5) n++;
+                cur.setDate(cur.getDate() + 1);
+            }
+            return `${start.getMonth() + 1}월 ${n}주차`;
+        }
+
+        function populateHofWeekSelect() {
+            hofWeeks = buildHofWeeks(8);
+            const sel = document.getElementById('hof-week-select');
+            sel.innerHTML = hofWeeks.map((w, i) =>
+                `<option value="${i}">${w.label}${i === 0 ? ' (최근)' : ''}</option>`).join('');
+            sel.value = String(hofWeekIndex);
+        }
+
+        function onHofWeekChange() {
+            hofWeekIndex = Number(document.getElementById('hof-week-select').value);
+            loadHallOfFame();
+        }
+
+        async function sbFetchHallOfFame(week) {
             if (!SB_ENABLED) return null;
             const entries = await Promise.all(HOF_MODE_ORDER.map(async mode => {
                 const [hard, easy] = await Promise.all([
-                    sbFetchByDiff(mode, 'hard', 3),
-                    sbFetchByDiff(mode, 'easy', 3)
+                    sbFetchByDiff(mode, 'hard', 3, week),
+                    sbFetchByDiff(mode, 'easy', 3, week)
                 ]);
                 return [mode, { hard: hard || [], easy: easy || [] }];
             }));
@@ -2892,9 +2984,11 @@
         }
 
         async function loadHallOfFame() {
+            if (!hofWeeks.length) populateHofWeekSelect();
+            document.getElementById('hof-week-select').value = String(hofWeekIndex);
             const list = document.getElementById('ranking-list');
             list.innerHTML = '<div class="lb-empty">불러오는 중…</div>';
-            const data = await sbFetchHallOfFame();
+            const data = await sbFetchHallOfFame(hofWeeks[hofWeekIndex]);
             renderHallOfFame(list, data);
         }
 
