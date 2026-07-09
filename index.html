@@ -211,11 +211,27 @@
             font-size: 1.05rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.15s ease;
+            transition: background 0.15s ease, box-shadow 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
         }
-        .chip:hover { background: var(--bg-btn-hover); transform: translateY(-1px); }
-        .chip.placed { background: var(--highlight); color: #fff; border-color: var(--highlight); cursor: grab; touch-action: none; }
-        .chip.placed.dragging { opacity: 0.6; transform: scale(1.06); cursor: grabbing; }
+        .chip:hover { background: var(--bg-btn-hover); }
+        .chip.placed {
+            background: var(--highlight);
+            color: #fff;
+            border-color: var(--highlight);
+            cursor: grab;
+            touch-action: none;
+            position: relative;
+        }
+        /* 드래그 중: 흐려지지(opacity) 않고 살짝 떠오르는 느낌만 (깜빡임 방지) */
+        .chip.placed.dragging {
+            cursor: grabbing;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+            z-index: 20;
+        }
         .arrange-ph { color: var(--text-dim); font-size: 0.9rem; }
         .correct { color: #16a34a; }
         [data-theme="dark"] .correct { color: #4ade80; }
@@ -1141,12 +1157,22 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.12.2";
+        const APP_VERSION = "1.13.0";
 
         // ---- 패치노트 ----
         // 지금까지의 변경 이력을 비슷한 주제끼리 묶어 1.0.0부터 다시 정리한 것.
         // 마이너 버전 하나 = 한 가지 큰 주제. 그 안에서도 종류별(✨기능/🎨스타일/🐛수정)로 묶는다.
         const PATCH_NOTES = [
+            {
+                version: "1.13.0", title: "카드조합 드래그 반응형 개선",
+                groups: [
+                    { cat: "✨ 기능", items: [
+                        "PC에서도 카드가 손끝(마우스)을 따라다니는 드래그 모션 적용",
+                        "다른 카드들이 자리를 비켜줄 때 부드럽게 슬라이드",
+                    ]},
+                    { cat: "🐛 수정", items: ["모바일에서 터치 시 카드가 흐려지며 깜빡이던 문제 수정"] },
+                ],
+            },
             {
                 version: "1.12.2", title: "카드조합 조작성 개선",
                 groups: [
@@ -2411,8 +2437,12 @@
         }
 
         // ---- 배치된 조각 드래그로 순서 바꾸기 ----
+        // 잡은 조각은 손가락/마우스를 그대로 따라다니고(transform translate),
+        // 자리를 비켜주는 다른 조각들은 FLIP 기법으로 부드럽게 슬라이드 이동한다.
         let arrangeDragId = null;
         let arrangeDragMoved = false;
+        let arrangeDragStartX = 0, arrangeDragStartY = 0;
+        let arrangeDragStartRect = null;
 
         function onArrangeAnswerClick(e) {
             if (arrangeDragMoved) { arrangeDragMoved = false; return; } // 드래그 직후 클릭은 무시
@@ -2424,8 +2454,12 @@
         function onArrangeAnswerPointerDown(e) {
             const chip = e.target.closest('.chip.placed');
             if (!chip) return;
+            e.preventDefault();
             arrangeDragId = Number(chip.dataset.id);
             arrangeDragMoved = false;
+            arrangeDragStartX = e.clientX;
+            arrangeDragStartY = e.clientY;
+            arrangeDragStartRect = chip.getBoundingClientRect();
             try { chip.setPointerCapture(e.pointerId); } catch (err) {}
             chip.addEventListener('pointermove', onArrangeAnswerPointerMove);
             chip.addEventListener('pointerup', onArrangeAnswerPointerUp);
@@ -2437,18 +2471,49 @@
             const ansEl = document.getElementById('arrange-answer');
             const dragEl = ansEl.querySelector(`.chip.placed[data-id="${arrangeDragId}"]`);
             if (!dragEl) return;
-            dragEl.classList.add('dragging');
-            arrangeDragMoved = true;
+            const dx = e.clientX - arrangeDragStartX;
+            const dy = e.clientY - arrangeDragStartY;
+            if (!arrangeDragMoved) {
+                if (Math.hypot(dx, dy) < 4) return; // 미세한 흔들림은 드래그로 취급하지 않음(탭과 구분)
+                arrangeDragMoved = true;
+                dragEl.classList.add('dragging');
+            }
+
+            // 1) 현재 순서를 기준으로 어느 자리로 옮겨야 할지 판단 (transform은 잠깐 끄고 실제 배치 위치로 측정)
+            dragEl.style.transition = 'none';
+            dragEl.style.transform = 'none';
             const siblings = [...ansEl.querySelectorAll('.chip.placed')].filter(el => el !== dragEl);
+            const oldRects = new Map(siblings.map(el => [el, el.getBoundingClientRect()]));
             let target = null;
             for (const sib of siblings) {
-                const r = sib.getBoundingClientRect();
+                const r = oldRects.get(sib);
                 if (e.clientX < r.left + r.width / 2) { target = sib; break; }
             }
-            if (target) ansEl.insertBefore(dragEl, target);
-            else ansEl.appendChild(dragEl);
-            const newOrder = [...ansEl.querySelectorAll('.chip.placed')].map(el => Number(el.dataset.id));
-            arrangeAnswer = newOrder.map(id => arrangeAnswer.find(p => p.id === id));
+            if (dragEl.nextElementSibling !== (target || null)) {
+                if (target) ansEl.insertBefore(dragEl, target);
+                else ansEl.appendChild(dragEl);
+                // FLIP: 자리가 바뀐 조각들을 이전 위치에서 새 위치로 부드럽게 슬라이드
+                siblings.forEach(el => {
+                    const oldRect = oldRects.get(el);
+                    const newRect = el.getBoundingClientRect();
+                    const shiftX = oldRect.left - newRect.left;
+                    const shiftY = oldRect.top - newRect.top;
+                    if (!shiftX && !shiftY) return;
+                    el.style.transition = 'none';
+                    el.style.transform = `translate(${shiftX}px, ${shiftY}px)`;
+                    el.offsetHeight; // 강제 리플로우로 위 transform을 즉시 반영시킨 뒤 아래 transition을 걸어야 애니메이션이 재생됨
+                    el.style.transition = 'transform 0.18s ease';
+                    el.style.transform = '';
+                });
+                const newOrder = [...ansEl.querySelectorAll('.chip.placed')].map(el => Number(el.dataset.id));
+                arrangeAnswer = newOrder.map(id => arrangeAnswer.find(p => p.id === id));
+            }
+
+            // 2) 잡은 조각을 포인터 위치로 이동 (자리 이동으로 생긴 위치 변화를 보정)
+            const staticRect = dragEl.getBoundingClientRect();
+            const followLeft = arrangeDragStartRect.left + dx;
+            const followTop = arrangeDragStartRect.top + dy;
+            dragEl.style.transform = `translate(${followLeft - staticRect.left}px, ${followTop - staticRect.top}px) scale(1.05)`;
         }
 
         function onArrangeAnswerPointerUp(e) {
@@ -2456,11 +2521,15 @@
             const ansEl = document.getElementById('arrange-answer');
             const dragEl = ansEl.querySelector(`.chip.placed[data-id="${arrangeDragId}"]`);
             if (dragEl) {
-                dragEl.classList.remove('dragging');
                 dragEl.removeEventListener('pointermove', onArrangeAnswerPointerMove);
                 dragEl.removeEventListener('pointerup', onArrangeAnswerPointerUp);
                 dragEl.removeEventListener('pointercancel', onArrangeAnswerPointerUp);
                 try { dragEl.releasePointerCapture(e.pointerId); } catch (err) {}
+                // 놓으면 원래 자리(정렬된 위치)로 부드럽게 안착
+                dragEl.style.transition = 'transform 0.15s ease';
+                dragEl.style.transform = '';
+                dragEl.classList.remove('dragging');
+                setTimeout(() => { dragEl.style.transition = ''; }, 160);
             }
             arrangeDragId = null;
         }
