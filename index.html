@@ -1260,12 +1260,18 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.15.1";
+        const APP_VERSION = "1.15.2";
 
         // ---- 패치노트 ----
         // 지금까지의 변경 이력을 비슷한 주제끼리 묶어 1.0.0부터 다시 정리한 것.
         // 마이너 버전 하나 = 한 가지 큰 주제. 그 안에서도 종류별(✨기능/🎨스타일/🐛수정)로 묶는다.
         const PATCH_NOTES = [
+            {
+                version: "1.15.2", title: "명예의전당 개편",
+                groups: [
+                    { cat: "✨ 기능", items: ["진행 중인 이번 주는 명예의전당 목록에서 제외, 확정된 지난 주(예: 7월 1주차)부터 표시"] },
+                ],
+            },
             {
                 version: "1.15.1", title: "명예의전당 개편",
                 groups: [
@@ -2913,7 +2919,7 @@
             document.getElementById('global-settings-btn').style.display = 'none';
             document.getElementById('ranking-area').style.display = 'flex';
             document.getElementById('ranking-area').style.flexDirection = 'column';
-            hofWeekIndex = 1; // 랭킹 창을 열 때마다 명예의전당은 기본값(직전에 확정된 주차)으로
+            hofWeekIndex = 0; // 랭킹 창을 열 때마다 명예의전당은 기본값(가장 최근에 끝난 주차)으로
             selectRankMode(rankMode);
         }
 
@@ -2952,16 +2958,17 @@
         };
 
         // 매주 금요일 00시 초기화 기준으로 주차를 나눔.
-        // index 0 = 이번 주(아직 진행 중), index 1 = 바로 직전에 끝난(확정된) 주 → 명예의전당 기본값
+        // 아직 진행 중인 이번 주는 목록에서 제외하고, 이미 끝난(확정된) 주부터 표시한다.
+        // index 0 = 가장 최근에 끝난 주 → 명예의전당 기본값
         let hofWeeks = [];
-        let hofWeekIndex = 1;
+        let hofWeekIndex = 0;
 
         function buildHofWeeks(count = 8) {
             const now = new Date();
             const daysSinceFriday = (now.getDay() - 5 + 7) % 7; // Fri=5
             const currentStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysSinceFriday);
             const weeks = [];
-            for (let i = 0; i < count; i++) {
+            for (let i = 1; i <= count; i++) { // i=1부터: 진행 중인 이번 주(i=0)는 건너뜀
                 const start = new Date(currentStart);
                 start.setDate(start.getDate() - 7 * i);
                 const end = new Date(start);
@@ -2986,7 +2993,7 @@
             hofWeeks = buildHofWeeks(8);
             const sel = document.getElementById('hof-week-select');
             sel.innerHTML = hofWeeks.map((w, i) =>
-                `<option value="${i}">${w.label}${i === 0 ? ' (진행중)' : i === 1 ? ' (최근 확정)' : ''}</option>`).join('');
+                `<option value="${i}">${w.label}${i === 0 ? ' (최근)' : ''}</option>`).join('');
             sel.value = String(hofWeekIndex);
         }
 
