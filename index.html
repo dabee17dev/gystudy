@@ -214,7 +214,8 @@
             transition: all 0.15s ease;
         }
         .chip:hover { background: var(--bg-btn-hover); transform: translateY(-1px); }
-        .chip.placed { background: var(--highlight); color: #fff; border-color: var(--highlight); }
+        .chip.placed { background: var(--highlight); color: #fff; border-color: var(--highlight); cursor: grab; touch-action: none; }
+        .chip.placed.dragging { opacity: 0.6; transform: scale(1.06); cursor: grabbing; }
         .arrange-ph { color: var(--text-dim); font-size: 0.9rem; }
         .correct { color: #16a34a; }
         [data-theme="dark"] .correct { color: #4ade80; }
@@ -695,6 +696,13 @@
         .lb-row.me {
             background: color-mix(in srgb, var(--highlight) 18%, transparent);
         }
+        .lb-left {
+            display: flex;
+            align-items: center;
+            width: 7.2rem;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
         .lb-rank {
             width: 2.4rem;
             text-align: right;
@@ -713,6 +721,11 @@
             text-overflow: ellipsis;
             text-align: center;
             padding-right: 0.5rem;
+        }
+        .lb-right {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
         }
         .lb-solved {
             font-weight: 700;
@@ -1117,12 +1130,22 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.11.3";
+        const APP_VERSION = "1.12.0";
 
         // ---- 패치노트 ----
         // 지금까지의 변경 이력을 비슷한 주제끼리 묶어 1.0.0부터 다시 정리한 것.
         // 마이너 버전 하나 = 한 가지 큰 주제. 그 안에서도 종류별(✨기능/🎨스타일/🐛수정)로 묶는다.
         const PATCH_NOTES = [
+            {
+                version: "1.12.0", title: "카드조합 조작성 개선",
+                groups: [
+                    { cat: "✨ 기능", items: [
+                        "카드조합 모드 최소 카드 수 3개 보장",
+                        "배치한 카드를 드래그해서 순서 변경 가능",
+                    ]},
+                    { cat: "🎨 스타일", items: ["랭킹 이름 가운데 정렬을 배지 길이와 무관하게 항상 정확히 맞춤"] },
+                ],
+            },
             {
                 version: "1.11.3", title: "패치노트",
                 groups: [
@@ -1669,12 +1692,16 @@
                 const catLabel = CAT_LABEL[r.category] || '전체'; // 종류 정보 없는 옛 기록은 전체로 표시
                 const classLabel = r.class ? `${r.class}반` : '미배정';
                 return `<div class="lb-row${me}">
-                    <div class="lb-rank${medal}">${mark}</div>
-                    <span class="lb-badge cat">${catLabel}</span>
-                    <span class="lb-badge cls">${classLabel}</span>
+                    <div class="lb-left">
+                        <div class="lb-rank${medal}">${mark}</div>
+                        <span class="lb-badge cat">${catLabel}</span>
+                        <span class="lb-badge cls">${classLabel}</span>
+                    </div>
                     <div class="lb-name">${nick}</div>
-                    <div class="lb-solved">${r.solved}점</div>
-                    <div class="lb-acc">${acc}</div>
+                    <div class="lb-right">
+                        <div class="lb-solved">${r.solved}점</div>
+                        <div class="lb-acc">${acc}</div>
+                    </div>
                 </div>`;
             }).join('');
 
@@ -2273,37 +2300,62 @@
 
         // ---- 단어 조각 배열 게임 (모드1: 표현, 모드4: 뜻) ----
         let arrangeWords = [];   // 정답 순서의 단어 배열
-        let arrangeBank = [];    // 남은 조각 [{id, text}]
-        let arrangeAnswer = [];  // 배치된 조각 [{id, text}]
+        let arrangeTarget = '';  // 정답 원문 (조각을 그대로 이어 붙이면 나와야 하는 문자열)
+        let arrangeBank = [];    // 남은 조각 [{id, text, newWord}]
+        let arrangeAnswer = [];  // 배치된 조각 [{id, text, newWord}]
 
-        // 단어를 1~3개씩 묶은 연속 청크로 분할 (원래 순서 유지)
-        function chunkWordsRandom(words, minSize, maxSize) {
+        const ARRANGE_MIN_PIECES = 3; // 카드조합 모드 최소 카드 수
+
+        // 단어를 1~2개씩 묶은 연속 청크로 분할 (원래 순서 유지)
+        function mergeWordsRandom(atoms, minSize, maxSize) {
             const chunks = [];
             let i = 0;
-            while (i < words.length) {
-                const remaining = words.length - i;
+            while (i < atoms.length) {
+                const remaining = atoms.length - i;
                 const maxTake = Math.min(maxSize, remaining);
                 const size = maxTake <= minSize ? maxTake : minSize + Math.floor(Math.random() * (maxTake - minSize + 1));
-                chunks.push(words.slice(i, i + size));
+                const group = atoms.slice(i, i + size);
+                chunks.push({ text: group.map(a => a.text).join(' '), newWord: group[0].newWord });
                 i += size;
             }
             return chunks;
         }
 
-        function setupArrange(target) {
-            arrangeWords = String(target).split(/\s+/).filter(Boolean);
-            // 쉬움: 정확히 2단어면 단어별 카드 2장, 3단어 이상은 1~2단어씩 묶어 카드 수를 줄임
-            // 하드: 단어 1개당 카드 1개(기존 방식)
-            let chunks;
-            if (difficulty === 'easy' && arrangeWords.length >= 3) {
-                chunks = chunkWordsRandom(arrangeWords, 1, 2);
-            } else {
-                chunks = arrangeWords.map(w => [w]);
+        // 카드 수가 최소치보다 적으면, 가장 긴 조각을 글자 단위로 반씩 쪼개 카드 수를 늘림
+        function ensureMinPieces(atoms, minCount) {
+            while (atoms.length < minCount) {
+                let idx = -1, maxLen = 1;
+                atoms.forEach((a, i) => { if (a.text.length > maxLen) { maxLen = a.text.length; idx = i; } });
+                if (idx === -1) break; // 더 쪼갤 수 없음 (모두 한 글자)
+                const a = atoms[idx];
+                const mid = Math.ceil(a.text.length / 2);
+                atoms.splice(idx, 1,
+                    { text: a.text.slice(0, mid), newWord: a.newWord },
+                    { text: a.text.slice(mid), newWord: false });
             }
-            const pieces = chunks.map((c, i) => ({ id: i, text: c.join(' ') }));
-            // 원래 순서와 다르게 섞기 (조각 2개 이상일 때)
+            return atoms;
+        }
+
+        // 조각들을 순서대로 이어붙여 원문 문자열 복원 (newWord인 조각 앞에만 공백 삽입)
+        function assembleArrangeText(list) {
+            return list.map((p, i) => (i > 0 && p.newWord ? ' ' : '') + p.text).join('');
+        }
+
+        function setupArrange(target) {
+            arrangeTarget = String(target);
+            arrangeWords = arrangeTarget.split(/\s+/).filter(Boolean);
+            let atoms = arrangeWords.map(w => ({ text: w, newWord: true }));
+            // 쉬움: 3단어 이상이면 1~2단어씩 묶어 카드 수를 줄임 (최소 카드 수는 아래에서 보장)
+            // 하드: 단어 1개당 카드 1개(기존 방식)
+            if (difficulty === 'easy' && arrangeWords.length >= 3) {
+                const merged = mergeWordsRandom(atoms, 1, 2);
+                if (merged.length >= ARRANGE_MIN_PIECES) atoms = merged;
+            }
+            ensureMinPieces(atoms, ARRANGE_MIN_PIECES);
+            const pieces = atoms.map((a, i) => ({ id: i, text: a.text, newWord: a.newWord }));
+            // 매번 랜덤하게 섞기
             do { arrangeBank = shuffle([...pieces]); }
-            while (pieces.length > 1 && arrangeBank.map(p => p.text).join(' ') === arrangeWords.join(' '));
+            while (pieces.length > 1 && assembleArrangeText(arrangeBank) === arrangeTarget);
             arrangeAnswer = [];
             document.getElementById('arrange-section').style.display = 'block';
             renderArrange();
@@ -2313,10 +2365,10 @@
             const bank = document.getElementById('arrange-bank');
             const ans = document.getElementById('arrange-answer');
             bank.innerHTML = arrangeBank.map(p =>
-                `<button class="chip" onclick="pickChip(${p.id})">${escapeHtml(p.text)}</button>`).join('');
+                `<button type="button" class="chip" onclick="pickChip(${p.id})">${escapeHtml(p.text)}</button>`).join('');
             ans.innerHTML = arrangeAnswer.length
-                ? arrangeAnswer.map(p => `<button class="chip placed" onclick="unpickChip(${p.id})">${escapeHtml(p.text)}</button>`).join('')
-                : '<span class="arrange-ph">조각을 순서대로 눌러 배열하세요</span>';
+                ? arrangeAnswer.map(p => `<button type="button" class="chip placed" data-id="${p.id}">${escapeHtml(p.text)}</button>`).join('')
+                : '<span class="arrange-ph">조각을 순서대로 눌러 배열하세요. 배치한 조각은 눌러서 빼거나, 드래그해서 순서를 바꿀 수 있어요</span>';
         }
 
         function pickChip(id) {
@@ -2335,11 +2387,66 @@
             renderArrange();
         }
 
+        // ---- 배치된 조각 드래그로 순서 바꾸기 ----
+        let arrangeDragId = null;
+        let arrangeDragMoved = false;
+
+        function onArrangeAnswerClick(e) {
+            if (arrangeDragMoved) { arrangeDragMoved = false; return; } // 드래그 직후 클릭은 무시
+            const chip = e.target.closest('.chip.placed');
+            if (!chip) return;
+            unpickChip(Number(chip.dataset.id));
+        }
+
+        function onArrangeAnswerPointerDown(e) {
+            const chip = e.target.closest('.chip.placed');
+            if (!chip) return;
+            arrangeDragId = Number(chip.dataset.id);
+            arrangeDragMoved = false;
+            try { chip.setPointerCapture(e.pointerId); } catch (err) {}
+            chip.addEventListener('pointermove', onArrangeAnswerPointerMove);
+            chip.addEventListener('pointerup', onArrangeAnswerPointerUp);
+            chip.addEventListener('pointercancel', onArrangeAnswerPointerUp);
+        }
+
+        function onArrangeAnswerPointerMove(e) {
+            if (arrangeDragId === null) return;
+            const ansEl = document.getElementById('arrange-answer');
+            const dragEl = ansEl.querySelector(`.chip.placed[data-id="${arrangeDragId}"]`);
+            if (!dragEl) return;
+            dragEl.classList.add('dragging');
+            arrangeDragMoved = true;
+            const siblings = [...ansEl.querySelectorAll('.chip.placed')].filter(el => el !== dragEl);
+            let target = null;
+            for (const sib of siblings) {
+                const r = sib.getBoundingClientRect();
+                if (e.clientX < r.left + r.width / 2) { target = sib; break; }
+            }
+            if (target) ansEl.insertBefore(dragEl, target);
+            else ansEl.appendChild(dragEl);
+            const newOrder = [...ansEl.querySelectorAll('.chip.placed')].map(el => Number(el.dataset.id));
+            arrangeAnswer = newOrder.map(id => arrangeAnswer.find(p => p.id === id));
+        }
+
+        function onArrangeAnswerPointerUp(e) {
+            if (arrangeDragId === null) return;
+            const ansEl = document.getElementById('arrange-answer');
+            const dragEl = ansEl.querySelector(`.chip.placed[data-id="${arrangeDragId}"]`);
+            if (dragEl) {
+                dragEl.classList.remove('dragging');
+                dragEl.removeEventListener('pointermove', onArrangeAnswerPointerMove);
+                dragEl.removeEventListener('pointerup', onArrangeAnswerPointerUp);
+                dragEl.removeEventListener('pointercancel', onArrangeAnswerPointerUp);
+                try { dragEl.releasePointerCapture(e.pointerId); } catch (err) {}
+            }
+            arrangeDragId = null;
+        }
+
         function submitArrange() {
             if (gameOver) return;
             if (arrangeAnswer.length === 0) return;
-            const assembled = arrangeAnswer.map(p => p.text).join(' ');
-            showFeedback(assembled === arrangeWords.join(' '));
+            const assembled = assembleArrangeText(arrangeAnswer);
+            showFeedback(assembled === arrangeTarget);
         }
 
         // 정답 유사도 판정: 약 80% 이상 비슷하면 통과 (조사/어미 차이·경미한 오타 허용)
@@ -2594,6 +2701,8 @@
         }
 
         // ---- 초기화 ----
+        document.getElementById('arrange-answer').addEventListener('pointerdown', onArrangeAnswerPointerDown);
+        document.getElementById('arrange-answer').addEventListener('click', onArrangeAnswerClick);
         document.getElementById('app-version').innerText = `v${APP_VERSION}`;
         loadSettings();
         // 로그인 상태 복원 (예전 형식: 문자열만 저장된 경우도 안전하게 무시)
