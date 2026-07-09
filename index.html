@@ -173,10 +173,13 @@
 
         /* Game Area specific */
         .question {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             margin-bottom: 1.5rem;
             line-height: 1.6;
             white-space: pre-wrap;
+            background: var(--bg-btn);
+            border-radius: 10px;
+            padding: 0.9rem 1.1rem;
         }
         .feedback { margin-top: 1rem; font-size: 1.1rem; font-weight: bold; min-height: 1.5rem; }
         .feedback-note { font-size: 0.8rem; font-weight: 500; color: var(--text-muted); margin-top: 3px; }
@@ -203,7 +206,7 @@
             min-height: 2.5rem;
         }
         .chip {
-            padding: 0.5rem 0.9rem;
+            padding: 1.15rem 0.9rem;
             border: 1px solid var(--border-color);
             border-radius: 10px;
             background: var(--bg-btn);
@@ -965,7 +968,7 @@
             /* 게임 화면: 가로에서 스크롤 없이 한 화면에 */
             #game-area { justify-content: flex-start; }
             #game-area .header { margin-bottom: 0.8rem; }
-            #game-area .question { font-size: 1rem; margin-bottom: 0.8rem; line-height: 1.4; }
+            #game-area .question { font-size: 1.1rem; margin-bottom: 0.8rem; line-height: 1.4; padding: 0.6rem 0.8rem; }
             #game-area .input-box { padding: 0.55rem; margin: 0.5rem 0; }
             #game-area .option-btn { padding: 0.5rem; font-size: 0.9rem; margin: 0.3rem 0; }
             #game-area .action-btn { padding: 0.55rem; margin-top: 0.5rem; }
@@ -1213,12 +1216,21 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.14.0";
+        const APP_VERSION = "1.14.1";
 
         // ---- 패치노트 ----
         // 지금까지의 변경 이력을 비슷한 주제끼리 묶어 1.0.0부터 다시 정리한 것.
         // 마이너 버전 하나 = 한 가지 큰 주제. 그 안에서도 종류별(✨기능/🎨스타일/🐛수정)로 묶는다.
         const PATCH_NOTES = [
+            {
+                version: "1.14.1", title: "카드조합 화면 가독성 개선",
+                groups: [
+                    { cat: "🎨 스타일", items: [
+                        "뜻 보고 표현 맞추기의 안내 문구 제거, 문제 글씨 크게 + 배경색 표시",
+                        "선택 카드 높이를 약 50% 크게 조정",
+                    ]},
+                ],
+            },
             {
                 version: "1.14.0", title: "랭킹 명예의 전당",
                 groups: [
@@ -2383,7 +2395,7 @@
             let exactMeaning = q.meaning;
 
             if (currentMode === 1) {
-                qText.innerText = `뜻: ${exactMeaning}\n\n뜻에 맞는 ${label}을(를) 순서대로 배열하세요.`;
+                qText.innerText = `뜻: ${exactMeaning}`;
                 setupArrange(q.idiom);
             } else if (currentMode === 2) {
                 qText.innerText = `${label}: "${q.idiom}"\n\n이 ${label}의 올바른 뜻은?`;
