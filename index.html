@@ -174,12 +174,19 @@
         /* Game Area specific */
         .question {
             font-size: 1.3rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 0.8rem;
             line-height: 1.6;
             white-space: pre-wrap;
             background: var(--bg-btn);
             border-radius: 10px;
             padding: 0.9rem 1.1rem;
+        }
+        .question-sub {
+            font-size: 1.05rem;
+            font-weight: 600;
+            text-align: left;
+            margin-bottom: 1.2rem;
+            line-height: 1.5;
         }
         .feedback { margin-top: 1rem; font-size: 1.1rem; font-weight: bold; min-height: 1.5rem; }
         .feedback-note { font-size: 0.8rem; font-weight: 500; color: var(--text-muted); margin-top: 3px; }
@@ -1002,7 +1009,8 @@
             /* 게임 화면: 가로에서 스크롤 없이 한 화면에 */
             #game-area { justify-content: flex-start; }
             #game-area .header { margin-bottom: 0.8rem; }
-            #game-area .question { font-size: 1.1rem; margin-bottom: 0.8rem; line-height: 1.4; padding: 0.6rem 0.8rem; }
+            #game-area .question { font-size: 1.1rem; margin-bottom: 0.5rem; line-height: 1.4; padding: 0.6rem 0.8rem; }
+            #game-area .question-sub { font-size: 0.9rem; margin-bottom: 0.7rem; }
             #game-area .input-box { padding: 0.55rem; margin: 0.5rem 0; }
             #game-area .option-btn { padding: 0.5rem; font-size: 0.9rem; margin: 0.3rem 0; }
             #game-area .action-btn { padding: 0.55rem; margin-top: 0.5rem; }
@@ -1212,7 +1220,8 @@
                 <span id="progress-display">문제 1</span>
             </div>
             <div id="question-text" class="question">질문 내용</div>
-            
+            <div id="question-sub" class="question-sub" style="display: none;"></div>
+
             <div id="input-section" style="display: none;">
                 <input type="text" id="answer-input" class="input-box" placeholder="정답을 입력하세요" onkeypress="if(event.key === 'Enter') submitAnswer()">
                 <div id="hint-row" style="display: none;">
@@ -1251,12 +1260,22 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.15.0";
+        const APP_VERSION = "1.15.1";
 
         // ---- 패치노트 ----
         // 지금까지의 변경 이력을 비슷한 주제끼리 묶어 1.0.0부터 다시 정리한 것.
         // 마이너 버전 하나 = 한 가지 큰 주제. 그 안에서도 종류별(✨기능/🎨스타일/🐛수정)로 묶는다.
         const PATCH_NOTES = [
+            {
+                version: "1.15.1", title: "명예의전당 개편",
+                groups: [
+                    { cat: "✨ 기능", items: ["명예의전당 기본 표시를 진행 중인 주 대신 직전에 끝난(확정된) 주차로 변경"] },
+                    { cat: "🎨 스타일", items: [
+                        "카드조합·초성퀴즈의 안내 문구 제거",
+                        "매칭 게임 질문을 배경 배지 밖으로 빼서 왼쪽 정렬 + 'Q.' 표시로 분리",
+                    ]},
+                ],
+            },
             {
                 version: "1.15.0", title: "명예의전당 개편",
                 groups: [
@@ -2429,6 +2448,7 @@
 
             const q = currentQuestions[currentIndex];
             const qText = document.getElementById('question-text');
+            const qSub = document.getElementById('question-sub');
             const inputSec = document.getElementById('input-section');
             const optionsSec = document.getElementById('options-section');
             const inputField = document.getElementById('answer-input');
@@ -2436,6 +2456,8 @@
             inputSec.style.display = 'none';
             optionsSec.style.display = 'none';
             document.getElementById('arrange-section').style.display = 'none';
+            qSub.style.display = 'none';
+            qSub.innerText = '';
             inputField.value = '';
 
             let label = q.type === "속담" ? "속담" : "관용표현";
@@ -2445,15 +2467,17 @@
                 qText.innerText = `뜻: ${exactMeaning}`;
                 setupArrange(q.idiom);
             } else if (currentMode === 2) {
-                qText.innerText = `${label}: "${q.idiom}"\n\n이 ${label}의 올바른 뜻은?`;
+                qText.innerText = `${label}: "${q.idiom}"`;
+                qSub.innerText = `Q. 이 ${label}의 올바른 뜻은?`;
+                qSub.style.display = 'block';
                 optionsSec.style.display = 'block';
                 optionsSec.innerHTML = '';
-                
+
                 let options = [exactMeaning];
                 let others = shuffle([...DB].filter(item => item.idiom !== q.idiom)).slice(0, 3);
                 others.forEach(o => options.push(o.meaning));
                 options = shuffle(options);
-                
+
                 options.forEach(opt => {
                     let btn = document.createElement('button');
                     btn.className = 'option-btn';
@@ -2466,7 +2490,7 @@
                 inputSec.style.display = 'block';
                 inputField.focus();
             } else if (currentMode === 4) {
-                qText.innerText = `${label}: "${q.idiom}"\n\n이 ${label}의 뜻을 순서대로 배열하세요.`;
+                qText.innerText = `${label}: "${q.idiom}"`;
                 setupArrange(exactMeaning);
             }
         }
@@ -2705,10 +2729,9 @@
         // 모드3(초성 퀴즈) 문제 텍스트 렌더링. 힌트 사용 시 초성 줄 바로 아래에 절반 노출된 글자를 채워 넣음
         function renderMode3Question() {
             const q = currentQuestions[currentIndex];
-            const label = q.type === "속담" ? "속담" : "관용표현";
             const lines = [`초성: ${q.chosung}`];
             if (hintUsed) lines.push(`힌트: ${buildHintReveal(q.idiom)}`);
-            lines.push(`뜻: ${q.meaning}`, '', `이 ${label}은(는)?`);
+            lines.push(`뜻: ${q.meaning}`);
             document.getElementById('question-text').innerText = lines.join('\n');
         }
 
@@ -2890,7 +2913,7 @@
             document.getElementById('global-settings-btn').style.display = 'none';
             document.getElementById('ranking-area').style.display = 'flex';
             document.getElementById('ranking-area').style.flexDirection = 'column';
-            hofWeekIndex = 0; // 랭킹 창을 열 때마다 명예의전당은 기본값(최근 주차)으로
+            hofWeekIndex = 1; // 랭킹 창을 열 때마다 명예의전당은 기본값(직전에 확정된 주차)으로
             selectRankMode(rankMode);
         }
 
@@ -2928,9 +2951,10 @@
             2: { emoji: '📖', label: '매칭 게임' },
         };
 
-        // 매주 금요일 00시 초기화 기준으로 주차를 나눔. index 0 = 이번 주(진행 중, 최근 주차)
+        // 매주 금요일 00시 초기화 기준으로 주차를 나눔.
+        // index 0 = 이번 주(아직 진행 중), index 1 = 바로 직전에 끝난(확정된) 주 → 명예의전당 기본값
         let hofWeeks = [];
-        let hofWeekIndex = 0;
+        let hofWeekIndex = 1;
 
         function buildHofWeeks(count = 8) {
             const now = new Date();
@@ -2962,7 +2986,7 @@
             hofWeeks = buildHofWeeks(8);
             const sel = document.getElementById('hof-week-select');
             sel.innerHTML = hofWeeks.map((w, i) =>
-                `<option value="${i}">${w.label}${i === 0 ? ' (최근)' : ''}</option>`).join('');
+                `<option value="${i}">${w.label}${i === 0 ? ' (진행중)' : i === 1 ? ' (최근 확정)' : ''}</option>`).join('');
             sel.value = String(hofWeekIndex);
         }
 
