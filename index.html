@@ -732,8 +732,6 @@
             flex-shrink: 0;
             color: #fff;
         }
-        .lb-badge.hard { background: #dc2626; }
-        .lb-badge.easy { background: #2563eb; }
         .lb-badge.cat { background: #6b7280; margin-right: 0.5rem; }
         .lb-badge.cls { background: #15803d; margin-right: 0.5rem; }
         .lb-sep {
@@ -1119,12 +1117,18 @@
     <script>
         // ---- App Version (유의적 버전, SemVer) ----
         // package.json의 "version"과 항상 동일하게 유지할 것
-        const APP_VERSION = "1.11.2";
+        const APP_VERSION = "1.11.3";
 
         // ---- 패치노트 ----
         // 지금까지의 변경 이력을 비슷한 주제끼리 묶어 1.0.0부터 다시 정리한 것.
         // 마이너 버전 하나 = 한 가지 큰 주제. 그 안에서도 종류별(✨기능/🎨스타일/🐛수정)로 묶는다.
         const PATCH_NOTES = [
+            {
+                version: "1.11.3", title: "패치노트",
+                groups: [
+                    { cat: "🎨 스타일", items: ["랭킹의 난이도 표시 배지 제거 (어려움/쉬움 구분 바로 충분)"] },
+                ],
+            },
             {
                 version: "1.11.2", title: "패치노트",
                 groups: [
@@ -1640,7 +1644,7 @@
             return { hard: hard || [], easy: easy || [] };
         }
 
-        // 통합 리더보드 렌더: 어려움 → 쉬움, 각 줄에 난이도 배지, (highlightNick+highlightClass) 강조
+        // 통합 리더보드 렌더: 어려움 → 쉬움, (highlightNick+highlightClass) 강조
         function renderCombinedBoard(container, data, highlightNick, highlightClass) {
             if (!SB_ENABLED) {
                 container.innerHTML = '<div class="lb-empty">랭킹 서버가 설정되지 않았습니다.<br>(.env.local 확인)</div>';
@@ -1655,7 +1659,7 @@
                 return;
             }
             const CAT_LABEL = { 'all': '전체', '속담': '속담만', '관용어': '관용어만' };
-            const section = (rows, diff, label) => rows.map((r, i) => {
+            const section = (rows) => rows.map((r, i) => {
                 const rank = i + 1;
                 const medal = rank <= 3 ? ' medal' : '';
                 const mark = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
@@ -1666,7 +1670,6 @@
                 const classLabel = r.class ? `${r.class}반` : '미배정';
                 return `<div class="lb-row${me}">
                     <div class="lb-rank${medal}">${mark}</div>
-                    <span class="lb-badge ${diff}">${label}</span>
                     <span class="lb-badge cat">${catLabel}</span>
                     <span class="lb-badge cls">${classLabel}</span>
                     <div class="lb-name">${nick}</div>
@@ -1677,8 +1680,8 @@
 
             // 유저가 1명뿐이어도 각 난이도 구간에 항상 라벨 바를 표시
             let html = '';
-            if (data.hard.length) html += '<div class="lb-sep">─ 어려움 ─</div>' + section(data.hard, 'hard', '어려움');
-            if (data.easy.length) html += '<div class="lb-sep">─ 쉬움 ─</div>' + section(data.easy, 'easy', '쉬움');
+            if (data.hard.length) html += '<div class="lb-sep">─ 어려움 ─</div>' + section(data.hard);
+            if (data.easy.length) html += '<div class="lb-sep">─ 쉬움 ─</div>' + section(data.easy);
             container.innerHTML = html;
         }
 
